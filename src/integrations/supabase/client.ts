@@ -1,6 +1,6 @@
 // Crowniq Local v1: small compatibility layer for the former Supabase calls.
-// Data is served by local_server.py on 127.0.0.1:8788.
-const API = "http://127.0.0.1:8788/api";
+// Data is served by local_server.py on [::1]:8788.
+const API = "http://[::1]:8788/api";
 
 type Result<T = any> = { data: T | null; error: any | null };
 type Filter = { column: string; value: any };

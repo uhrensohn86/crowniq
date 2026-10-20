@@ -27,11 +27,16 @@ function Settings() {
   useEffect(()=>{ try { setDashboardStats((v)=>({...v,...JSON.parse(localStorage.getItem("crowniq-dashboard-stats")||"{}")})); } catch {} },[]);
   const toggleDashboardStat=(key:string,checked:boolean)=>{ const next={...dashboardStats,[key]:checked}; setDashboardStats(next); localStorage.setItem("crowniq-dashboard-stats",JSON.stringify(next)); };
 
+  const userId = user?.id;
   useEffect(() => {
-    if (!user) return;
-    supabase.from("profiles").select("display_name").eq("id", user.id).single()
-      .then(({ data }) => setDisplayName(data?.display_name ?? ""));
-  }, [user]);
+    if (!userId) return;
+    let active = true;
+    supabase.from("profiles").select("display_name").eq("id", userId).single()
+      .then(({ data }) => {
+        if (active) setDisplayName(data?.display_name ?? "");
+      });
+    return () => { active = false; };
+  }, [userId]);
 
   const saveProfile = async () => {
     if (!user) return;
@@ -55,6 +60,104 @@ function Settings() {
       { type: "application/json" }
     );
     download(blob, `watches-${new Date().toISOString().slice(0, 10)}.json`);
+  };
+
+  const [exportingZip, setExportingZip] = useState(false);
+  const exportFullZip = async () => {
+    if (exportingZip) return;
+    setExportingZip(true);
+    try {
+      const response = await fetch("http://[::1]:8788/api/backup/export");
+      if (!response.ok) {
+        let message = `HTTP ${response.status}`;
+        try { const payload = await response.json(); message = payload?.error?.message || message; } catch {}
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      download(blob, match?.[1] || `crowniq-backup-${new Date().toISOString().slice(0, 10)}.zip`);
+      toast.success("Vollständiges Backup erstellt");
+    } catch (error) {
+      toast.error(`Backup fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setExportingZip(false);
+    }
+  };
+
+  const previewFileRef = useRef<HTMLInputElement>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [selectedZipName, setSelectedZipName] = useState<string | null>(null);
+  const [restoreConfirmed, setRestoreConfirmed] = useState(false);
+  // Production restore requires ZIP verification, checkbox and a second confirmation.
+  const RESTORE_UI_ENABLED = true;
+  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [backupPreview, setBackupPreview] = useState<null | {created_at: string; tables: Record<string, number>; image_files: number; files_verified: number}>(null);
+  const previewZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBackupPreview(null);
+    setSelectedZipName(null);
+    setSelectedZipFile(null);
+    setRestoreConfirmed(false);
+    setPreviewBusy(true);
+    try {
+      const response = await fetch("http://[::1]:8788/api/backup/preview", {
+        method: "POST", headers: {"Content-Type": "application/zip"}, body: file,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result?.error?.message || `HTTP ${response.status}`);
+      setBackupPreview(result);
+      setSelectedZipName(file.name);
+      setSelectedZipFile(file);
+      toast.success("ZIP-Backup erfolgreich geprüft – keine Daten verändert");
+    } catch (error) {
+      toast.error(`Backup-Pruefung fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setPreviewBusy(false);
+      if (previewFileRef.current) previewFileRef.current.value = "";
+    }
+  };
+
+  const restoreFullZip = async () => {
+    if (!RESTORE_UI_ENABLED || restoring || previewBusy || !restoreConfirmed || !backupPreview || !selectedZipFile) return;
+    const name = selectedZipFile.name;
+    const wants = window.confirm(
+      "PRODUKTIVE WIEDERHERSTELLUNG\n\n" +
+      "Die gesamte derzeitige Crowniq-Sammlung wird durch dieses ZIP ersetzt:\n" + name + "\n\n" +
+      "Backup enthält " + (backupPreview.tables.watches ?? 0) + " Uhren, " +
+      (backupPreview.tables.watch_wears ?? 0) + " Trageeinträge und " +
+      backupPreview.image_files + " Bilder.\n\n" +
+      "Vor dem Austausch erstellt Crowniq automatisch eine separate Sicherheitskopie der aktuellen Daten.\n" +
+      "Änderungen seit diesem Backup fehlen danach in der aktiven Sammlung.\n\n" +
+      "Wirklich wiederherstellen?"
+    );
+    if (!wants) return;
+    setRestoring(true);
+    try {
+      const response = await fetch("http://[::1]:8788/api/backup/restore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/zip",
+          "X-Crowniq-Confirm": "REPLACE-CROWNIQ-DATA",
+        },
+        body: selectedZipFile,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result?.error?.message || `HTTP ${response.status}`);
+      toast.success("Wiederhergestellt. Die vorherige Sammlung wurde separat gesichert.");
+      setBackupPreview(null);
+      setSelectedZipName(null);
+      setSelectedZipFile(null);
+      setRestoreConfirmed(false);
+      window.setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      toast.error(`Wiederherstellung fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
+      // The backend may have recovered from an interrupted swap. Do not auto-retry.
+    } finally {
+      setRestoring(false);
+    }
   };
 
   const exportCsv = async () => {
@@ -174,6 +277,33 @@ function Settings() {
           <CardDescription>{t("settings.backupDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportFullZip} disabled={exportingZip}><Download className="h-4 w-4" /> {exportingZip ? "Backup wird erstellt…" : "Vollständiges ZIP-Backup"}</Button>
+          <div className="w-full mt-3 border-t pt-3 space-y-2">
+            <p className="text-sm font-medium">ZIP-Wiederherstellung vorbereiten</p>
+            <p className="text-sm text-muted-foreground">Backup auswaehlen und sicher pruefen. Noch keine Wiederherstellung – deine Sammlung bleibt unveraendert.</p>
+            <Button type="button" variant="outline" disabled={previewBusy || restoring} onClick={() => previewFileRef.current?.click()}><Upload className="h-4 w-4" /> {previewBusy ? "Backup wird geprueft…" : "ZIP-Backup pruefen"}</Button>
+            <input ref={previewFileRef} type="file" accept=".zip,application/zip" className="hidden" onChange={previewZip} />
+            {backupPreview && <div className="rounded-md border p-3 text-sm space-y-3" role="status">
+              <p className="font-semibold">Backup gültig – noch nichts wiederhergestellt</p>
+              <p className="break-all">Datei: {selectedZipName}</p>
+              <p>Erstellt: {backupPreview.created_at ? new Date(backupPreview.created_at).toLocaleString() : "Unbekannt"}</p>
+              <p>Uhren: {backupPreview.tables.watches ?? 0} · Bilder: {backupPreview.image_files}</p>
+              <p>Trageeinträge: {backupPreview.tables.watch_wears ?? 0} · Rabatte: {backupPreview.tables.watch_purchase_discounts ?? 0}</p>
+              <p>Prüfsummen verifiziert: {backupPreview.files_verified}</p>
+              <div className="border-t pt-3 space-y-3">
+                <p className="font-semibold">Wiederherstellung vorbereiten</p>
+                <p className="text-muted-foreground">Bei einer späteren Wiederherstellung wird der aktuelle Crowniq-Datenbestand durch den Inhalt dieses Backups ersetzt. Änderungen seit der Sicherung wären anschließend nicht mehr im aktiven Datenbestand enthalten.</p>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" className="mt-1 h-4 w-4" checked={restoreConfirmed} disabled={restoring} onChange={(e) => setRestoreConfirmed(e.target.checked)} />
+                  <span>Ich verstehe, dass eine Wiederherstellung meine derzeitige Sammlung ersetzen würde.</span>
+                </label>
+                <Button type="button" variant="destructive" onClick={restoreFullZip} disabled={!RESTORE_UI_ENABLED || !restoreConfirmed || !backupPreview || !selectedZipFile || restoring || previewBusy}>
+                  {restoring ? "Wiederherstellung läuft…" : "Sammlung aus ZIP wiederherstellen"}
+                </Button>
+                <p className="text-muted-foreground">Achtung: Der aktive Datenbestand wird ersetzt. Crowniq legt vorher automatisch eine separate Sicherheitskopie unter <code>~/crowniq/.restore-safety-backups/</code> an. Bitte erst wiederherstellen, wenn du das wirklich möchtest.</p>
+              </div>
+            </div>}
+          </div>
           <Button variant="outline" onClick={exportJson}><Download className="h-4 w-4" /> {t("settings.exportJson")}</Button>
           <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4" /> {t("settings.exportCsv")}</Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()}>

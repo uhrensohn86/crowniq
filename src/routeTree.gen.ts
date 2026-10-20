@@ -9,28 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppWearRouteImport } from './routes/_app.wear'
-import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppWearRouteImport } from './routes/_app.wear'
 import { Route as AppWatchesIndexRouteImport } from './routes/_app.watches.index'
 import { Route as AppWatchesNewRouteImport } from './routes/_app.watches.new'
 import { Route as AppWatchesIdIndexRouteImport } from './routes/_app.watches.$id.index'
 import { Route as AppWatchesIdEditRouteImport } from './routes/_app.watches.$id.edit'
 
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppWearRoute = AppWearRouteImport.update({
-  id: '/wear',
-  path: '/wear',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -38,9 +38,9 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AppWearRoute = AppWearRouteImport.update({
+  id: '/wear',
+  path: '/wear',
   getParentRoute: () => AppRoute,
 } as any)
 const AppWatchesIndexRoute = AppWatchesIndexRouteImport.update({
@@ -137,13 +137,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -151,11 +144,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/wear': {
-      id: '/_app/wear'
-      path: '/wear'
-      fullPath: '/wear'
-      preLoaderRoute: typeof AppWearRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -165,11 +165,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/dashboard': {
-      id: '/_app/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
+    '/_app/wear': {
+      id: '/_app/wear'
+      path: '/wear'
+      fullPath: '/wear'
+      preLoaderRoute: typeof AppWearRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/watches/': {

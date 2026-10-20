@@ -41,3 +41,20 @@ crowniq-data-backup-*/
 !.env.example
 *.pem
 *.key
+
+# Crowniq restore and development backups
+.crowniq-restore-previous-*/
+.ipv6-backup/
+.patch-backups/
+.restore-*/
+*.before-*
+*.bak-*
+*.backup-*
+
+# Local databases, archives and sensitive files
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.zip
+*.pfx
