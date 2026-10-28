@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Crowniq v1.1.4: Python API + Vite production preview in one Termux session.
+# Crowniq v1.2.0: Python API + Vite production preview in one Termux session.
 set -Eeuo pipefail
 
 PROJECT="$HOME/crowniq"

@@ -2,7 +2,7 @@
 
 Crowniq is a local-first, mobile-friendly watch collection manager. The Termux edition stores collection information and watch images on the device. It does **not** require a Crowniq account or a cloud database.
 
-**Project status:** The existing release marker is `1.1.4` (`VERSION.txt`). This repository also contains **post-v1.1.4 development improvements**, including the local backup/restore V3 workflow. No new numbered release is claimed until a clean-install test and release review are complete.
+**Project version:** `1.2.0` (`VERSION.txt`). This version includes the local timegrapher and backup/restore V3. Before publishing a GitHub release, verify the tagged code with a fresh Termux installation on a separate device or isolated environment. The microphone timegrapher remains experimental and uncalibrated.
 
 ## Features
 
@@ -15,6 +15,10 @@ Crowniq is a local-first, mobile-friendly watch collection manager. The Termux e
 - CSV/JSON data export and **complete ZIP backup including the SQLite database and images**
 - ZIP-backup preview/validation before restore
 - Confirmed restore with pre-restore safety copy, storage-space checks and crash-recovery handling
+- Experimental local microphone timegrapher: 90-second sessions (30-second warm-up and three 20-second analysis windows), automatic beat-rate detection, estimated rate and beat error
+- Watch-specific timegrapher history, six recorded watch positions, and manual entry of measurements from a physical timegrapher
+
+**Timegrapher accuracy:** Microphone rate/beat-error values are estimates, not reference-grade or chronometer certification. Signal plausibility measures detector consistency, not absolute accuracy. Crowniq does not measure amplitude from phone audio. Demo signals are for diagnostics and cannot be saved as real watch measurements.
 
 **Note:** An Excel sheet has been imported successfully into one local Crowniq collection with a separate, one-off Termux script. **General XLSX import is not yet part of the application UI or the repository's standard installation.**
 
@@ -31,6 +35,8 @@ cd ~/crowniq
 bash install-termux.sh
 bash start.sh
 ```
+
+To install an immutable published version instead of the current `main` branch, clone its tag, for example `git clone --branch v1.2.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq` after the release has been published. Do not clone over an existing installation.
 
 Open **http://[::1]:3000** in the browser on the **same Android device**. The browser UI uses the local Python API at **http://[::1]:8788**. On the tested Android configuration, IPv6 loopback (`[::1]`) works more reliably than IPv4 `127.0.0.1`.
 
@@ -97,6 +103,8 @@ npm run build
 ```
 
 The frontend and backend must be started/configured consistently for local development. Avoid sharing real user collections when filing issues; use synthetic sample data instead. More screenshots and release-specific migration notes may be added later.
+
+For changes in v1.2.0, see [CHANGELOG.md](CHANGELOG.md). The experimental microphone tool can be opened from Crowniq's three-dot menu or directly from a watch's detail view.
 
 ## License
 

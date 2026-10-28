@@ -2,7 +2,7 @@
 
 Crowniq läuft lokal auf Android mit React/Vite als Oberfläche und einem Python-Backend mit SQLite. Du brauchst keinen Crowniq-Account und keine externe Datenbank.
 
-**Versionshinweis:** `VERSION.txt` steht derzeit noch auf **1.1.4**. Im aktuellen Entwicklungsstand sind bereits die späteren Termux-, Backup- und Restore-V3-Verbesserungen integriert. Die nächste Versionsnummer sollte erst nach einem überprüften Release vergeben werden.
+**Versionshinweis:** `VERSION.txt` steht auf **1.2.0**. Zu diesem Stand gehören die experimentelle Mikrofon-Zeitwaage und die Backup-/Restore-V3-Verbesserungen. Vor der Veröffentlichung eines neuen GitHub-Releases muss eine frische Installation aus einem Git-Klon separat geprüft werden.
 
 ## 1. Voraussetzungen
 
@@ -26,6 +26,12 @@ git clone https://github.com/uhrensohn86/crowniq.git ~/crowniq
 cd ~/crowniq
 bash install-termux.sh
 bash start.sh
+```
+
+Nach der Veröffentlichung von v1.2.0 kann statt des Entwicklungsstands `main` dessen unveränderlicher Release-Tag ausgecheckt werden:
+
+```bash
+git clone --branch v1.2.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq
 ```
 
 Die Installation nutzt die im Repository gespeicherte `package-lock.json` und `npm ci`; anschließend wird das Frontend gebaut. Sie **löscht keine vorhandene Sammlung**. Wenn npm oder der Build fehlschlägt, bitte die genaue Ausgabe prüfen und nicht ungeprüft alternative Installer ausführen.
@@ -90,13 +96,19 @@ bash upgrade-termux.sh --apply
 
 Das Skript führt vor Änderungen einen Testbuild mit dem neuen Quellcode aus, legt eine lokale Datenkopie an und übernimmt nur einen fast-forward-fähigen Git-Stand. Bei einem Fehler die angezeigte Ausgabe prüfen und den produktiven Server nicht blind neu starten.
 
-## 7. Excel-Daten
+## 7. Experimentelle Zeitwaage
+
+Die Zeitwaage lässt sich aus dem Drei-Punkte-Menü oder direkt aus den Details einer Uhr öffnen. Für Mikrofonmessungen wird eine von sechs Messlagen ausgewählt. Nach 30 Sekunden Einmessung folgen drei getrennte Abschnitte zu je 20 Sekunden. Nur ausreichend übereinstimmende Ergebnisse lassen sich speichern und einer Uhr zuordnen. Zusätzlich sind manuelle Messungen von einer echten Zeitwaage möglich.
+
+**Wichtig:** Die Mikrofonwerte sind unkalibrierte Schätzungen. 99 oder 100 Prozent Signalplausibilität bedeuten keine garantierte Ganggenauigkeit. Die Amplitude wird nicht aus dem Telefonmikrofon ermittelt. Demowerte werden nicht bei Uhren gespeichert; der Demo-Modus liegt eingeklappt im optionalen Detektortest.
+
+## 8. Excel-Daten
 
 Eine Excel-Tabelle mit Uhren wurde erfolgreich mittels eines separaten Python-Skripts gegen einen Crowniq-CSV-Export abgeglichen. 22 neue Uhren konnten ergänzt werden; unklare Einträge wurden ausgelassen. **Dies war ein einmaliger Import, noch keine allgemeine Excel-Importfunktion in Crowniq.** Bilder können im Browser ergänzt werden.
 
-## 8. Bekannte Einschränkungen
+## 9. Bekannte Einschränkungen
 
 - Die lokale Edition hat keinen Mehrbenutzer-Login. Nicht ohne separate Absicherung öffentlich hosten.
 - Die Schriftarten der Oberfläche werden derzeit über Google Fonts geladen; für vollständig offline müssen sie lokal eingebunden werden.
-- Die Installation wurde auf Termux betrieben und getestet. Ein frischer GitHub-Klon auf einem zweiten Gerät sollte nach jedem Release separat getestet werden.
+- Die Installation wurde auf Termux betrieben und getestet. Ein frischer GitHub-Klon auf einem zweiten Gerät sollte vor jedem Release separat getestet werden.
 - Für Proxmox/LXC gibt es noch keine vollständig getestete Installationsanleitung.
