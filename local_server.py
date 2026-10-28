@@ -11,7 +11,8 @@ import sqlite3, json, uuid, datetime, mimetypes, shutil, zipfile, io, os
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data'; IMAGES=DATA/'images'; DB=DATA/'crowniq.db'
 # Data directories are created only after startup recovery.
-TABLES={'profiles','watches','watch_images','watch_purchase_discounts','watch_wears'}
+REQUIRED_TABLES={'profiles','watches','watch_images','watch_purchase_discounts','watch_wears'}
+TABLES=REQUIRED_TABLES | {'watch_timegrapher_measurements'}
 JSON_COLS={'complications'}
 
 def now(): return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -37,11 +38,33 @@ CREATE TABLE IF NOT EXISTS watch_purchase_discounts(id TEXT PRIMARY KEY, watch_i
 CREATE TABLE IF NOT EXISTS watch_wears(id TEXT PRIMARY KEY, user_id TEXT NOT NULL DEFAULT 'local-user',
  watch_id TEXT NOT NULL REFERENCES watches(id) ON DELETE CASCADE, worn_on TEXT NOT NULL, notes TEXT,
  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(user_id,watch_id,worn_on));
+CREATE TABLE IF NOT EXISTS watch_timegrapher_measurements(
+ id TEXT PRIMARY KEY, watch_id TEXT NOT NULL REFERENCES watches(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL DEFAULT 'local-user',
+ source TEXT NOT NULL CHECK(source IN ('crowniq','manual')),
+ recorded_at TEXT NOT NULL, rate_s_per_day REAL, beat_error_ms REAL, bph INTEGER,
+ amplitude_deg REAL, lift_angle_deg REAL, position TEXT,
+ confidence_pct INTEGER, quality TEXT, notes TEXT,
+ duration_s INTEGER, rate_spread_s_per_day REAL, beat_spread_ms REAL,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+ CHECK(rate_s_per_day IS NOT NULL OR beat_error_ms IS NOT NULL OR bph IS NOT NULL OR amplitude_deg IS NOT NULL),
+ CHECK(beat_error_ms IS NULL OR (beat_error_ms >= 0 AND beat_error_ms <= 1000)),
+ CHECK(bph IS NULL OR (bph >= 1000 AND bph <= 50000)),
+ CHECK(amplitude_deg IS NULL OR (amplitude_deg >= 0 AND amplitude_deg <= 360)),
+ CHECK(lift_angle_deg IS NULL OR (lift_angle_deg >= 0 AND lift_angle_deg <= 90)),
+ CHECK(confidence_pct IS NULL OR (confidence_pct >= 0 AND confidence_pct <= 100)));
+CREATE INDEX IF NOT EXISTS idx_timegrapher_watch_date
+ ON watch_timegrapher_measurements(watch_id, recorded_at DESC);
 ''')
     # Forward-compatible schema migration for existing v1/v1.1 databases.
     cols={r['name'] for r in c.execute('PRAGMA table_info(watches)')}
     if 'case_finish' not in cols: c.execute('ALTER TABLE watches ADD COLUMN case_finish TEXT')
     if 'case_coating' not in cols: c.execute('ALTER TABLE watches ADD COLUMN case_coating TEXT')
+    # Additive migration for installations that already contain V0.5 measurements.
+    measure_cols={r['name'] for r in c.execute('PRAGMA table_info(watch_timegrapher_measurements)')}
+    for field, column_type in (('duration_s','INTEGER'),('rate_spread_s_per_day','REAL'),('beat_spread_ms','REAL')):
+        if field not in measure_cols:
+            c.execute(f'ALTER TABLE watch_timegrapher_measurements ADD COLUMN {field} {column_type}')
     c.execute("INSERT OR IGNORE INTO profiles(id,display_name,created_at,updated_at) VALUES('local-user','',?,?)",(now(),now())); c.commit(); c.close()
 
 def clean_row(r):
@@ -58,8 +81,21 @@ def prep(d, table, inserting=False):
         if k in x: x[k]=json.dumps(x[k] or [])
     if inserting:
         x.setdefault('id',str(uuid.uuid4())); x.setdefault('created_at',t)
-    if table in {'watches','watch_wears','profiles'}: x['updated_at']=t
+    if table in {'watches','watch_wears','profiles','watch_timegrapher_measurements'}: x['updated_at']=t
     return x
+
+def verify_backup_table_counts(connection, manifest):
+    """Accept original five-table backups as well as backups with measurements."""
+    expected = manifest.get('tables')
+    if (not isinstance(expected, dict) or
+            not REQUIRED_TABLES.issubset(expected) or
+            not set(expected).issubset(TABLES)):
+        raise ValueError('Tabellenliste ungueltig')
+    counts = {table: connection.execute('SELECT COUNT(*) FROM ' + table).fetchone()[0]
+              for table in sorted(expected)}
+    if counts != expected:
+        raise ValueError('Tabellenzahlen stimmen nicht mit Manifest ueberein')
+    return counts
 
 def allowed_cols(c, table):
     names={r['name'] for r in conn().execute(f'PRAGMA table_info({table})')}
@@ -249,10 +285,7 @@ class H(BaseHTTPRequestHandler):
                         foreign_keys = connection.execute('PRAGMA foreign_key_check').fetchall()
                         if foreign_keys:
                             raise ValueError('Datenbank enthaelt fehlerhafte Fremdschluessel')
-                        counts = {table: connection.execute('SELECT COUNT(*) FROM ' + table).fetchone()[0]
-                                  for table in sorted(TABLES)}
-                        if counts != manifest.get('tables'):
-                            raise ValueError('Tabellenzahlen stimmen nicht mit Manifest ueberein')
+                        counts = verify_backup_table_counts(connection, manifest)
                         paths = [r[0] for r in connection.execute('SELECT storage_path FROM watch_images')]
                         for raw in paths:
                             if not isinstance(raw, str) or not raw.strip():
@@ -410,9 +443,7 @@ def verify_and_extract(archive, destination):
             raise ValueError('SQLite integrity_check fehlgeschlagen')
         if c.execute('PRAGMA foreign_key_check').fetchall():
             raise ValueError('SQLite Fremdschluessel fehlerhaft')
-        counts = {t: c.execute('SELECT COUNT(*) FROM ' + t).fetchone()[0] for t in sorted(TABLES)}
-        if counts != manifest.get('tables'):
-            raise ValueError('Tabellenzaehler falsch')
+        counts = verify_backup_table_counts(c, manifest)
         paths = [r[0] for r in c.execute('SELECT storage_path FROM watch_images')]
         for raw in paths:
             if not isinstance(raw, str) or not raw.strip():
@@ -485,8 +516,11 @@ def _v2_db_image_check(folder):
                 return False
             if c.execute('PRAGMA foreign_key_check').fetchall():
                 return False
-            for table in TABLES:
+            for table in REQUIRED_TABLES:
                 c.execute('SELECT COUNT(*) FROM ' + table).fetchone()
+            # Old recovery snapshots may predate the optional measurement table.
+            if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='watch_timegrapher_measurements'").fetchone():
+                c.execute('SELECT COUNT(*) FROM watch_timegrapher_measurements').fetchone()
             for (raw,) in c.execute('SELECT storage_path FROM watch_images'):
                 if not isinstance(raw, str) or not raw.strip():
                     return False
@@ -704,6 +738,9 @@ def restore_backup_v3(self):
                     output.write(chunk)
                     remaining -= len(chunk)
             counts, backup = restore_transaction_v2(archive)
+            # A verified legacy backup predates optional newer tables. Add only
+            # forward-compatible schema objects after its safe restore.
+            init_db()
             return self.sendj({'ok': True, 'tables': counts,
                                'safety_backup': str(backup)})
     except Exception as exc:

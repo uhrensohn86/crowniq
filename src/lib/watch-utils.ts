@@ -2,10 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const MOVEMENT_TYPES = ["automatic", "quartz", "manual", "spring-drive", "kinetic"] as const;
 export const CRYSTALS = ["sapphire", "mineral", "acrylic", "hardlex"] as const;
+// Stable stored IDs: never rename an existing entry without a migration.
+// Labels and alphabetical sorting are handled in WatchForm for the active language.
 export const COMPLICATIONS = [
   "date", "day-date", "chronograph", "gmt", "moonphase",
   "perpetual-calendar", "tourbillon", "power-reserve", "world-time", "alarm",
   "verschraubte-krone", "luenette-unidirektional", "luenette-bidirektional",
+  "24-hour-display", "annual-calendar", "big-date", "dual-time",
+  "helium-valve", "month-display", "open-heart", "pulsometer",
+  "regulator", "slide-rule", "small-seconds", "tachymeter",
+  "weekday-display",
 ] as const;
 export const CASE_MATERIALS = [
   "stainless-steel", "gold-yellow", "gold-rose", "gold-white",

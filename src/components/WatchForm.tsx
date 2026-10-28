@@ -72,7 +72,15 @@ const num = (s: string) => (s.trim() === "" ? null : Number(s));
 export function WatchForm({ watchId }: { watchId?: string }) {
   const user = useLocalUser();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+
+  // Alphabetical by the visible translation, not by the stored identifier.
+  const sortedComplications = useMemo(() => {
+    const collator = new Intl.Collator(lang, { sensitivity: "base", numeric: true });
+    return [...COMPLICATIONS].sort((a, b) =>
+      collator.compare(t(`form.complication.${a}`), t(`form.complication.${b}`))
+    );
+  }, [lang, t]);
   const [data, setData] = useState<WatchFormData>(empty);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -449,6 +457,11 @@ export function WatchForm({ watchId }: { watchId?: string }) {
               <option value="">{t("form.selectPlaceholder")}</option>
               <option value="screwed">{t("form.caseBack.screwed")}</option>
               <option value="pressed">{t("form.caseBack.pressed")}</option>
+              <option value="screwed-exhibition">{t("form.caseBack.screwed-exhibition")}</option>
+              {/* Preserve unknown future/legacy values when editing an existing watch. */}
+              {data.case_back && !["screwed", "pressed", "geschraubt", "gepresst", "screwed-exhibition"].includes(data.case_back) && (
+                <option value={data.case_back}>{data.case_back}</option>
+              )}
             </NativeSelect>
           </Field>
           {data.movement_type === "quartz" && (
@@ -463,7 +476,7 @@ export function WatchForm({ watchId }: { watchId?: string }) {
           <div className="sm:col-span-2">
             <Label className="text-sm">{t("form.complications")}</Label>
             <div className="mt-2 flex flex-wrap gap-2">
-              {COMPLICATIONS.map((c) => {
+              {sortedComplications.map((c) => {
                 const active = data.complications.includes(c);
                 return (
                   <button

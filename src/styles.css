@@ -95,3 +95,18 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Crowniq Timegrapher: navy + teal. Theme limited to this root class. */
+.theme-timegrapher {
+  --background: #0b1220; --foreground: #e9f0f7;
+  --card: #162238; --card-foreground: var(--foreground);
+  --popover: #1b2b43; --popover-foreground: var(--foreground);
+  --primary: #55c5a8; --primary-foreground: #081b22;
+  --secondary: #213149; --secondary-foreground: #e9f0f7;
+  --muted: #1c2a40; --muted-foreground: #aebfce;
+  --accent: #55c5a8; --accent-foreground: #081b22;
+  --destructive: #d76f75; --destructive-foreground: #fff;
+  --border: #33445d; --input: #33445d; --ring: #55c5a8;
+  --chart-1: #55c5a8; --chart-2: #dbaa69; --chart-3: #85b9db;
+  --chart-4: #9876c2; --chart-5: #e18f92;
+}

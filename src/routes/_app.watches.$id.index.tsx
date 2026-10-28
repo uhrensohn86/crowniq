@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignedImage } from "@/components/SignedImage";
+import { TimegrapherHistory } from "@/components/TimegrapherHistory";
 import { formatCurrency, getImageUrl } from "@/lib/watch-utils";
 import { useI18n } from "@/lib/i18n";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
@@ -217,6 +218,8 @@ function WatchDetail() {
           )}
         </CardContent>
       </Card>
+
+      <TimegrapherHistory watchId={id} />
 
       {watch.notes && (
         <Card>

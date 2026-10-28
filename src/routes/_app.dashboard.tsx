@@ -4,6 +4,7 @@ import { useLocalUser } from "@/lib/local-user";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/watch-utils";
 import { Watch as WatchIcon, TrendingUp, TrendingDown, Wallet, ShieldCheck } from "lucide-react";
 import {
@@ -30,9 +31,25 @@ interface WatchRow {
 
 const CHART_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
+type BrandView = "bar" | "donut" | "table";
+const BRAND_VIEW_STORAGE = "crowniq-dashboard-brand-view";
+
 function Dashboard() {
   const user = useLocalUser();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [brandView, setBrandView] = useState<BrandView>("bar");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(BRAND_VIEW_STORAGE);
+      if (stored === "bar" || stored === "donut" || stored === "table") setBrandView(stored);
+    } catch { /* Storage unavailable: keep bar chart as default. */ }
+  }, []);
+
+  const chooseBrandView = (view: BrandView) => {
+    setBrandView(view);
+    try { localStorage.setItem(BRAND_VIEW_STORAGE, view); } catch {}
+  };
   const [watches, setWatches] = useState<WatchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleStats, setVisibleStats] = useState<Record<string, boolean>>({ watches:true, cost:true, market:true, insurance:true });
@@ -67,12 +84,21 @@ function Dashboard() {
   const valueDelta = totalMarket - valuedCost;
   const valueDeltaPct = valuedCost > 0 ? (valueDelta / valuedCost) * 100 : 0;
 
+  const brandCollator = new Intl.Collator(lang, { sensitivity: "base", numeric: true });
   const byBrand = Object.entries(
     watches.reduce<Record<string, number>>((acc, w) => {
       acc[w.brand] = (acc[w.brand] ?? 0) + 1;
       return acc;
     }, {})
-  ).map(([name, value]) => ({ name, value }));
+  )
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value || brandCollator.compare(a.name, b.name));
+  const topBrands = byBrand.slice(0, 10);
+  const remainingBrands = byBrand.slice(10);
+  const remainingWatches = remainingBrands.reduce((sum, brand) => sum + brand.value, 0);
+  const donutBrands = remainingWatches > 0
+    ? [...topBrands, { name: t("dashboard.brand.other"), value: remainingWatches }]
+    : topBrands;
 
   const byMovement = Object.entries(
     watches.reduce<Record<string, number>>((acc, w) => {
@@ -118,28 +144,89 @@ function Dashboard() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-3">
               <CardTitle>{t("dashboard.chart.byBrand")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={byBrand} dataKey="value" nameKey="name" outerRadius={90} innerRadius={50} paddingAngle={2}>
-                    {byBrand.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {byBrand.map((b, i) => (
-                  <span key={b.name} className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
-                    {b.name} ({b.value})
-                  </span>
+              <div role="group" aria-label={t("dashboard.brand.view")} className="flex flex-wrap gap-2">
+                {(["bar", "donut", "table"] as const).map((view) => (
+                  <Button
+                    type="button"
+                    key={view}
+                    size="sm"
+                    variant={brandView === view ? "default" : "outline"}
+                    aria-pressed={brandView === view}
+                    onClick={() => chooseBrandView(view)}
+                  >
+                    {t(`dashboard.brand.${view}`)}
+                  </Button>
                 ))}
               </div>
+            </CardHeader>
+            <CardContent>
+              {brandView === "bar" && (
+                <div>
+                  <p className="mb-3 text-xs text-muted-foreground">{t("dashboard.brand.topTen")}</p>
+                  <ResponsiveContainer width="100%" height={Math.max(250, topBrands.length * 38)}>
+                    <BarChart data={topBrands} layout="vertical" margin={{ top: 4, right: 12, left: 2, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} stroke="var(--muted-foreground)" fontSize={11} />
+                      <YAxis type="category" dataKey="name" width={112} stroke="var(--muted-foreground)" fontSize={11} tickLine={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" name={t("dashboard.brand.count")} fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  {remainingBrands.length > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {t("dashboard.brand.more", { brands: remainingBrands.length, watches: remainingWatches })}
+                    </p>
+                  )}
+                </div>
+              )}
+              {brandView === "donut" && (
+                <div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={donutBrands} dataKey="value" nameKey="name" outerRadius={92} innerRadius={52} paddingAngle={2}>
+                        {donutBrands.map((brand, i) => (
+                          <Cell key={brand.name + i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    {donutBrands.map((brand, i) => (
+                      <span key={brand.name + i} className="flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                        {brand.name} ({brand.value})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {brandView === "table" && (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[270px] text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th scope="col" className="py-2 pr-2 font-medium">{t("dashboard.brand.name")}</th>
+                        <th scope="col" className="px-2 py-2 text-right font-medium">{t("dashboard.brand.count")}</th>
+                        <th scope="col" className="py-2 pl-2 text-right font-medium">{t("dashboard.brand.share")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {byBrand.map((brand) => (
+                        <tr key={brand.name} className="border-b border-border/60 last:border-0">
+                          <td className="py-2 pr-2">{brand.name}</td>
+                          <td className="px-2 py-2 text-right tabular-nums">{brand.value}</td>
+                          <td className="py-2 pl-2 text-right tabular-nums">
+                            {new Intl.NumberFormat(lang, { style: "percent", maximumFractionDigits: 1 }).format(brand.value / total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
 

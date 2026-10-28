@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Theme = "ivory" | "graphite" | "oled";
+export type Theme = "ivory" | "graphite" | "oled" | "timegrapher";
 type ThemeContextValue = { theme: Theme; toggleTheme: () => void; setTheme: (t: Theme) => void };
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 const STORAGE_KEY = "crowniq-theme";
-const THEMES: Theme[] = ["ivory", "graphite", "oled"];
+const THEMES: Theme[] = ["ivory", "graphite", "oled", "timegrapher"];
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "ivory";
@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => setThemeState(getInitialTheme()), []);
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("dark", "theme-graphite", "theme-oled");
+    root.classList.remove("dark", "theme-graphite", "theme-oled", "theme-timegrapher");
     if (theme !== "ivory") root.classList.add("dark", `theme-${theme}`);
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
   }, [theme]);

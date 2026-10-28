@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <title>Crowniq — Zeitwaage</title>
+  <meta name="description" content="Lokaler Timegrapher-Versuch mit automatischer Schlagzahlerkennung und Ganglinien">
+  <link rel="stylesheet" href="./style.css?v=070">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-icon">◷</div><div><b>CROWNIQ</b><span>ZEITWAAGE</span></div></div>
+    <div class="crowniq-bridge"><a href="/dashboard" class="crowniq-back">← Crowniq</a><span class="pill lab">BETA · V0.7</span></div>
+  </header>
+  <main class="layout">
+    <section class="intro">
+      <div class="eyebrow">LOKALES MESSLABOR</div>
+      <h1>Deine Uhr. <span>Ihr Takt.</span></h1>
+      <p>90 Sekunden mit Einmessphase, Auswertung in drei getrennten Abschnitten und eindeutiger Messposition. Für echte mechanische Uhren – weiterhin experimentell.</p>
+    </section>
+    <div class="columns">
+      <div class="maincol">
+        <section class="panel sourcepanel">
+          <div class="panel-top"><div><h2 id="sourceTitle">Mikrofonmessung</h2><p class="muted" id="sourceDescription">Echte Uhr messen · 90 Sekunden · lokal.</p></div><div class="status" id="status"><i></i><span>Bereit</span></div></div>
+          <div id="micOptions" class="options">
+            <p class="notice">Uhr möglichst ruhig in der gewählten Lage halten und das Mikrofon nahe ans Gehäuse bringen. Die Messung endet nach 90 Sekunden automatisch. Keine Audioaufzeichnung wird dauerhaft gespeichert.</p>
+          </div>
+          <div class="stability-selection">
+            <label for="stabilityMode">Anzeigeruhe</label>
+            <select id="stabilityMode" aria-label="Geschwindigkeit und Ruhe der Messwertanzeige">
+              <option value="quick">Schnell · ab 12 s</option>
+              <option value="balanced">Ausgewogen · ab 20 s</option>
+              <option value="quiet" selected>Ruhig · ab 25 s</option>
+            </select>
+            <span class="hint">Steuert nur die Ruhe der Live-Anzeige. Das endgültige Ergebnis verwendet unabhängig davon die feste 90-Sekunden-Messung.</span>
+          </div>
+          <div class="position-picker" id="positionPicker">
+            <div class="position-heading"><strong>Messposition der Uhr</strong><span id="selectedPosition">Noch keine Lage ausgewählt</span></div>
+            <div class="position-grid" role="group" aria-label="Messposition der Uhr auswählen">
+              <button type="button" class="position-option" data-position="dial_up" aria-pressed="false">
+                <span class="watch-picto face-up" aria-hidden="true"><span class="watch-round"></span><span class="watch-crown"></span></span>
+                <span>Zifferblatt<br>oben</span>
+              </button>
+              <button type="button" class="position-option" data-position="dial_down" aria-pressed="false">
+                <span class="watch-picto face-down" aria-hidden="true"><span class="watch-round"></span><span class="watch-crown"></span></span>
+                <span>Zifferblatt<br>unten</span>
+              </button>
+              <button type="button" class="position-option" data-position="crown_up" aria-pressed="false">
+                <span class="watch-picto side crown-up" aria-hidden="true"><span class="watch-body"></span><span class="watch-crown"></span></span>
+                <span>Krone<br>oben</span>
+              </button>
+              <button type="button" class="position-option" data-position="crown_down" aria-pressed="false">
+                <span class="watch-picto side crown-down" aria-hidden="true"><span class="watch-body"></span><span class="watch-crown"></span></span>
+                <span>Krone<br>unten</span>
+              </button>
+              <button type="button" class="position-option" data-position="crown_left" aria-pressed="false">
+                <span class="watch-picto side crown-left" aria-hidden="true"><span class="watch-body"></span><span class="watch-crown"></span></span>
+                <span>Krone<br>links</span>
+              </button>
+              <button type="button" class="position-option" data-position="crown_right" aria-pressed="false">
+                <span class="watch-picto side crown-right" aria-hidden="true"><span class="watch-body"></span><span class="watch-crown"></span></span>
+                <span>Krone<br>rechts</span>
+              </button>
+            </div>
+            <p class="hint">Die Piktogramme zeigen die Ausrichtung der Uhr zur Schwerkraft – nicht die Kontaktstelle zum Smartphone-Mikrofon. Die Lage wird zusammen mit dem Ergebnis gespeichert.</p>
+          </div>
+          <details id="demoPanel" class="demo-advanced">
+            <summary>Demo-Modus / Detektortest <span>optional</span></summary>
+            <p class="muted">Künstliche Signale für Funktionsprüfungen. Demo-Ergebnisse lassen sich nicht bei einer Uhr speichern.</p>
+            <div class="tabbar" role="group" aria-label="Signalquelle">
+              <button id="micTab" class="tab active" type="button" aria-pressed="true">◉ Mikrofon</button>
+              <button id="demoTab" class="tab" type="button" aria-pressed="false">◈ Demo aktivieren</button>
+            </div>
+            <div id="demoOptions" class="options hidden">
+              <label for="demoBph">Schlagzahl des Testgenerators</label>
+              <select id="demoBph">
+                <option value="18000">18.000 A/h</option><option value="19800">19.800 A/h</option>
+                <option value="21600" selected>21.600 A/h</option><option value="25200">25.200 A/h</option>
+                <option value="28800">28.800 A/h</option><option value="36000">36.000 A/h</option>
+              </select>
+              <label for="demoScenario">Testfall</label>
+              <select id="demoScenario">
+                <option value="normal" selected>+8 s/Tag · normal</option>
+                <option value="fast">+35 s/Tag · schnell</option>
+                <option value="slow">−30 s/Tag · langsam</option>
+                <option value="noisy">+8 s/Tag · Störimpulse</option>
+                <option value="dropout">+8 s/Tag · Tick-Aussetzer</option>
+                <option value="chaos">Stark gestörtes Signal</option>
+              </select>
+              <span class="hint">Die angegebenen Werte steuern nur das künstliche Signal. Die Auswertung erhält diese Werte nicht vorab.</span>
+            </div>
+          </details>
+          <div class="actions"><button type="button" class="primary" id="startBtn"><span id="startIcon">▶</span> <span id="startText">Demo starten</span></button><button type="button" class="secondary" id="resetBtn">Zurücksetzen</button></div>
+          <div class="session-progress" role="status" aria-live="polite">
+            <div class="session-progress-top"><strong id="sessionPhase">Bereit für 90 Sekunden</strong><span id="sessionTimer">00:00 / 01:30</span></div>
+            <div class="session-track"><span id="sessionBar"></span></div>
+            <p id="sessionHint">30 Sekunden Einmessung, danach 60 Sekunden Auswertung.</p>
+          </div>
+          <div id="error" class="error hidden" role="alert"></div>
+        </section>
+        <section class="panel chartpanel wavepanel">
+          <div class="panel-top"><div><h2>Live-Signal</h2><p class="muted">Akustische Energie · letzte 2 Sekunden</p></div><span class="live-mark" id="signalTag">KEIN SIGNAL</span></div>
+          <div class="chartwrap"><canvas id="waveform" aria-label="Live-Mikrofonsignal als Energiekurve"></canvas></div>
+          <div class="graph-footer"><span>Ruhige Spitzen gesucht</span><span id="signalLevel">Pegel: —</span></div>
+        </section>
+        <section class="panel chartpanel tracepanel">
+          <div class="panel-top"><div><h2>Timegrapher-Spuren</h2><p class="muted">Schlag A und Schlag B relativ zum Solltakt · letzte 18 Sekunden</p></div><span class="live-mark" id="traceStatus">WARTET</span></div>
+          <div class="trace-controls" role="group" aria-label="Darstellung der Timegrapher-Spuren">
+            <button id="calmBtn" class="trace-switch active" type="button" aria-pressed="true">Ruhige Linien</button>
+            <button id="detailBtn" class="trace-switch" type="button" aria-pressed="false">Rohpunkte</button>
+          </div>
+          <div class="trace-legend"><span><i class="dot dot-tick"></i> Schlag A</span><span><i class="dot dot-tack"></i> Schlag B</span></div>
+          <div class="chartwrap tracewrap"><canvas id="traceCanvas" aria-label="Timegrapher-Linien aus einzelnen Hemmungsschlägen"></canvas></div>
+          <div class="graph-footer"><span id="traceScale">Abweichung: — ms</span><span>Zeit →</span></div>
+          <p class="smallprint" id="traceInfo">Ruhige Ansicht: Die Messspuren A/B werden ausschließlich für die Darstellung robust geglättet. Die Rohdaten und Messberechnungen bleiben unverändert.</p>
+        </section>
+        <section class="panel diagnosticpanel">
+          <div class="panel-top"><div><h2>Diagnose</h2><p class="muted">Wie stabil sind die erfassten Impulse?</p></div></div>
+          <div class="diagnostic">
+            <div><span>Erkannte Schläge (20 s)</span><b id="detected">—</b></div>
+            <div><span>Messdauer</span><b id="duration">00:00</b></div>
+            <div><span>Signalregelmäßigkeit</span><b id="quality">—</b></div>
+            <div><span>Zeitstreuung (RMS)</span><b id="rms">—</b></div>
+            <div><span>Audio-Schnittstelle</span><b id="audioInfo">Noch nicht geprüft</b></div>
+            <div><span>Weitere Kandidaten</span><b id="candidates">—</b></div>
+          </div>
+          <p class="signal-reason" id="reason" aria-live="polite">Warte auf ein geeignetes Signal.</p>
+        </section>
+      </div>
+      <div class="sidecol">
+        <section class="panel associationpanel">
+          <h2>Messung einer Uhr zuordnen</h2>
+          <p class="muted">Nach einer stabilen Mikrofonmessung kannst du das Ergebnis direkt in deiner Sammlung speichern.</p>
+          <label for="watchSelect">Uhr aus Crowniq</label>
+          <select id="watchSelect" aria-label="Uhr für das Messergebnis auswählen" disabled>
+            <option value="">Uhren werden geladen …</option>
+          </select>
+          <div class="actions">
+            <button type="button" class="primary" id="saveMeasurementBtn" disabled>Messung speichern</button>
+            <a id="viewWatchLink" class="secondary watch-link hidden" href="/watches">Uhr ansehen</a>
+          </div>
+          <p id="saveStatus" class="association-status" role="status" aria-live="polite">Nur echte Mikrofonmessungen werden übernommen; Demo-Signale bleiben Testdaten.</p>
+        </section>
+        <section class="panel resultpanel">
+          <div class="results-head"><h2>Messwerte</h2><span id="confidence" class="pill">WARTET</span></div>
+          <div id="finalSummary" class="final-summary hidden" role="status" aria-live="polite"></div>
+          <div class="big-value"><span>Erkannte Schlagzahl</span><div><strong id="bph">—</strong><span>A/h</span></div><p id="bphHint">Warte auf ein regelmäßiges Tick-Signal.</p></div>
+          <div class="gate-info" role="status" aria-live="polite">
+            <div class="gate-top"><strong id="phaseLabel">Suche läuft</strong><span id="gateRemaining">—</span></div>
+            <div class="gate-track"><span id="gateBar"></span></div>
+            <p id="phaseHint">Messwerte werden nach der Einmessphase freigegeben.</p>
+          </div>
+          <div class="measure-grid"><div class="measure"><span>Gangabweichung</span><div><b id="rate">—</b><small>s/Tag</small></div></div><div class="measure"><span>Abfallfehler</span><div><b id="beatError">—</b><small>ms</small></div></div></div>
+          <p id="rawValues" class="raw-values hidden" aria-live="off"></p>
+          <div class="trend-head"><span>Ruhiger Gangverlauf</span><span>letzte 60 s</span></div>
+          <div class="trend-chart"><canvas id="rateTrend" aria-label="Geglättete Gangabweichung der letzten 60 Sekunden"></canvas></div>
+          <p id="trendHint" class="trend-hint">Warte auf eine stabile Messung.</p>
+          <div class="scoreline"><span>Detektor-Plausibilität</span><b id="score">—</b></div>
+          <div class="progress"><span id="scoreBar"></span></div>
+          <p class="disclaimer"><b>Experimentell:</b> Live-Werte bleiben unkalibrierte Schätzungen. Das Endergebnis wird aus drei voneinander getrennten 20-Sekunden-Abschnitten berechnet und nur bei ausreichender Übereinstimmung freigegeben. Die Signalplausibilität ist kein Nachweis der Messgenauigkeit. Mehrere Messungen mit einer Referenz vergleichen.</p>
+        </section>
+        <section class="panel help">
+          <h2>Erster Test mit deiner Uhr</h2>
+          <ol><li><b>Lage auswählen:</b> Die Uhr entsprechend dem Piktogramm ausrichten. Die Mikrofonöffnung nahe am Gehäuse halten.</li>
+          <li><b>Messung abschließen:</b> Möglichst nichts bewegen und die automatischen 90 Sekunden abwarten.</li>
+          <li><b>Referenz vergleichen:</b> Dieselbe Uhr in derselben Lage mit einer echten Zeitwaage oder längerfristig mit Timerity prüfen.</li>
+          <li><b>Falls keine Ticks:</b> Uhr drehen oder das Mikrofon näher an Boden/Krone bringen – keinesfalls einen Wert erzwingen.</li>
+          <li><b>Optionaler Detektortest:</b> Der Demo-Modus steckt unterhalb der Messlagen.</li></ol>
+          <div class="privacy">⌁ Ausschließlich lokal · keine Cloud · Speicherung nur nach deiner Bestätigung</div>
+        </section>
+      </div>
+    </div>
+    <footer>Crowniq Zeitwaage · Experimentelle Messwerte · Zuordnung zur Uhrensammlung möglich</footer>
+  </main>
+  <script type="module" src="./main.mjs?v=070"></script>
+</body></html>

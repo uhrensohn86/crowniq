@@ -237,10 +237,10 @@ function Settings() {
           <CardTitle>Darstellung</CardTitle>
           <CardDescription>Crowniq-Farbthema auf diesem Gerät.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-2">
-          {(["ivory", "graphite", "oled"] as Theme[]).map((item) => (
+        <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(["ivory", "graphite", "oled", "timegrapher"] as Theme[]).map((item) => (
             <Button key={item} type="button" variant={theme === item ? "default" : "outline"} onClick={() => setTheme(item)} className="capitalize">
-              {item === "ivory" ? "Ivory" : item === "graphite" ? "Graphite" : "OLED"}
+              {item === "ivory" ? "Ivory" : item === "graphite" ? "Graphite" : item === "oled" ? "OLED" : "Timegrapher"}
             </Button>
           ))}
         </CardContent>

@@ -54,6 +54,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {t("nav.newWatch")}
               </Link>
             </Button>
+            <details className="group relative">
+              <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring" title="Werkzeuge" aria-label="Werkzeuge öffnen">
+                <span aria-hidden="true" className="text-2xl leading-none">⋮</span>
+              </summary>
+              <div className="absolute right-0 top-full z-50 mt-2 min-w-44 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-xl">
+                <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">Werkzeuge</p>
+                <a href="/tools/timegrapher/index.html" className="block rounded-md px-3 py-2 text-sm hover:bg-secondary focus-visible:bg-secondary">Zeitwaage</a>
+              </div>
+            </details>
             <Button
               variant="ghost"
               size="icon"
