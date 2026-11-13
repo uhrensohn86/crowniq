@@ -58,3 +58,7 @@ crowniq-data-backup-*/
 *.sqlite3
 *.zip
 *.pfx
+
+# Python test caches
+__pycache__/
+*.pyc

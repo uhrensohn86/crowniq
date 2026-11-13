@@ -24,6 +24,18 @@
         <section class="panel sourcepanel">
           <div class="panel-top"><div><h2 id="sourceTitle">Mikrofonmessung</h2><p class="muted" id="sourceDescription">Echte Uhr messen · 90 Sekunden · lokal.</p></div><div class="status" id="status"><i></i><span>Bereit</span></div></div>
           <div id="micOptions" class="options">
+            <label for="microphoneDevice">Audioeingang</label>
+            <select id="microphoneDevice"><option value="">Browser-/Android-Standard</option></select>
+            <button type="button" class="secondary" id="refreshMicrophones">Mikrofone erkennen</button>
+            <label for="microphoneType">Messquelle zuordnen</label>
+            <select id="microphoneType">
+              <option value="auto">Automatisch anhand des Gerätenamens</option>
+              <option value="internal">Internes Smartphone-Mikrofon (manuell)</option>
+              <option value="usb">Externes USB-Mikrofon / TGBC (manuell)</option>
+              <option value="unknown">Unbekannt / anderes Mikrofon</option>
+            </select>
+            <p class="hint">„Mikrofone erkennen“ fragt die Berechtigung ab. Die Zuordnung dokumentiert die Quelle; den tatsächlichen Eingang wählst du oben oder in Android. Bei unklarem Gerätenamen bitte manuell zuordnen. USB vor dem Start anschließen.</p>
+            <p id="microphoneStatus" class="hint" role="status" aria-live="polite">Messquelle noch nicht geprüft.</p>
             <p class="notice">Uhr möglichst ruhig in der gewählten Lage halten und das Mikrofon nahe ans Gehäuse bringen. Die Messung endet nach 90 Sekunden automatisch. Keine Audioaufzeichnung wird dauerhaft gespeichert.</p>
           </div>
           <div class="stability-selection">
@@ -173,5 +185,5 @@
     </div>
     <footer>Crowniq Zeitwaage · Experimentelle Messwerte · Zuordnung zur Uhrensammlung möglich</footer>
   </main>
-  <script type="module" src="./main.mjs?v=070"></script>
+  <script type="module" src="./main.mjs?v=tgbc1"></script>
 </body></html>

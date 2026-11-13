@@ -1,9 +1,10 @@
+import {describeMicrophone, microphoneConstraints, listMicrophones} from './microphone.mjs';
 import {EnvelopeBuffer, DemoSource} from './analyzer.mjs';
 import {calmPhasePoints, summarizeTrend} from './presentation.mjs';
 import {MeasurementStabilizer, PROFILES} from './stabilization.mjs';
 import {SessionCollector, WARMUP_MS, TOTAL_MS} from './session.mjs';
 const $=id=>document.getElementById(id);
-const fields=['demoTab','micTab','demoPanel','demoOptions','micOptions','sourceTitle','sourceDescription','positionPicker','demoBph','demoScenario','status','startBtn','startText','startIcon','resetBtn','error','waveform','traceCanvas','traceStatus','traceScale','calmBtn','detailBtn','rateTrend','rawValues','trendHint','signalTag','signalLevel','detected','duration','quality','rms','audioInfo','candidates','reason','confidence','bph','bphHint','rate','beatError','score','scoreBar','stabilityMode','phaseLabel','phaseHint','gateBar','gateRemaining','watchSelect','saveMeasurementBtn','saveStatus','viewWatchLink','selectedPosition','sessionPhase','sessionTimer','sessionBar','sessionHint','finalSummary'];
+const fields=['microphoneDevice','microphoneType','refreshMicrophones','microphoneStatus','demoTab','micTab','demoPanel','demoOptions','micOptions','sourceTitle','sourceDescription','positionPicker','demoBph','demoScenario','status','startBtn','startText','startIcon','resetBtn','error','waveform','traceCanvas','traceStatus','traceScale','calmBtn','detailBtn','rateTrend','rawValues','trendHint','signalTag','signalLevel','detected','duration','quality','rms','audioInfo','candidates','reason','confidence','bph','bphHint','rate','beatError','score','scoreBar','stabilityMode','phaseLabel','phaseHint','gateBar','gateRemaining','watchSelect','saveMeasurementBtn','saveStatus','viewWatchLink','selectedPosition','sessionPhase','sessionTimer','sessionBar','sessionHint','finalSummary'];
 const els=Object.fromEntries(fields.map(id=>[id,$(id)]));
 const buffer=new EnvelopeBuffer(1,20000);
 let mode='mic',running=false,timer=null,audioContext=null,stream=null,audioNode=null,gain=null;
@@ -17,6 +18,34 @@ const POSITION_NAMES=Object.freeze({
   crown_left:'Krone links',crown_right:'Krone rechts',
 });
 let chosenPosition=null;
+let measurementMicrophone=null, probingMicrophones=false;
+function updateMicrophoneControls(){
+  const locked=running||probingMicrophones||!!completedMeasurement;
+  for(const key of ['microphoneDevice','microphoneType','refreshMicrophones'])els[key].disabled=locked;
+  // Avoid competing asynchronous starts while the permission probe is open.
+  els.startBtn.disabled=probingMicrophones;
+}
+async function refreshMicrophones(requestPermission=false){
+  if(running||probingMicrophones)return;
+  probingMicrophones=true;updateMicrophoneControls();
+  let probe=null;
+  try{
+    if(requestPermission)probe=await navigator.mediaDevices.getUserMedia(microphoneConstraints());
+    const devices=await listMicrophones(navigator.mediaDevices);
+    const selected=els.microphoneDevice.value;
+    els.microphoneDevice.replaceChildren(new Option('Browser-/Android-Standard',''));
+    for(const [index,device] of devices.entries())els.microphoneDevice.add(new Option(device.label||`Mikrofon ${index+1} (Name nicht verfügbar)`,device.deviceId));
+    if(devices.some(device=>device.deviceId===selected))els.microphoneDevice.value=selected;
+    else if(selected){els.microphoneType.value='auto';els.microphoneStatus.textContent='Vorheriger Eingang nicht mehr verfügbar. Bitte Eingang und Zuordnung erneut prüfen.';}
+    if(requestPermission)els.microphoneStatus.textContent=devices.length?'Eingänge geladen. Quelle wird beim Messstart am aktiven Mikrofon geprüft.':'Browser liefert keine Geräteliste. Standard verwenden und Quelle manuell zuordnen.';
+  }catch{
+    els.microphoneStatus.textContent='Geräteerkennung nicht verfügbar oder Zugriff abgelehnt. Browserberechtigung prüfen; Standard und manuelle Zuordnung sind weiterhin wählbar.';
+  }finally{
+    probe?.getTracks().forEach(track=>track.stop());
+    probingMicrophones=false;updateMicrophoneControls();
+  }
+}
+
 const API='http://[::1]:8788/api';
 const requestedWatchId=new URLSearchParams(window.location.search).get('watchId');
 let completedMeasurement=null,savedMeasurement=false,knownWatchIds=new Set(),savingMeasurement=false;
@@ -97,7 +126,8 @@ async function loadCollectionWatches(){
 }
 function resetReadings(){
   buffer.reset();session.reset();lastAnalysis=null;stabilizer.reset();displayReadings=null;trendSamples=[];lastTrendSample=-Infinity;
-  completedMeasurement=null;savedMeasurement=false;
+  completedMeasurement=null;savedMeasurement=false;measurementMicrophone=null;
+  updateMicrophoneControls();
   els.finalSummary.classList.add('hidden');
   els.viewWatchLink.classList.add('hidden');
   updateSaveControls();
@@ -296,7 +326,15 @@ function createDemo(){
 async function startMicrophone(){
   if(!window.isSecureContext)throw new Error('Lokale Adresse wird nicht als sicherer Kontext erkannt. http://[::1]:3000/tools/timegrapher/ öffnen.');
   if(!navigator.mediaDevices?.getUserMedia)throw new Error('Mikrofon-API fehlt in diesem Browser. Firefox oder Chrome verwenden.');
-  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1},video:false});
+  stream=await navigator.mediaDevices.getUserMedia(microphoneConstraints(els.microphoneDevice.value));
+  const track=stream.getAudioTracks()[0];
+  if(!track||track.readyState==='ended')throw new Error('Kein aktiver Audioeingang.');
+  measurementMicrophone=describeMicrophone(track,els.microphoneType.value);
+  const names={internal:'Internes Mikrofon',usb:'Externes USB-Mikrofon / TGBC',unknown:'Mikrofon unbekannt'};
+  els.microphoneStatus.textContent=`${names[measurementMicrophone.microphone_type]} · ${measurementMicrophone.microphone_detection==='manual'?'manuell zugeordnet':measurementMicrophone.microphone_detection==='label'?'anhand des Gerätenamens erkannt':'bitte vor der nächsten Messung manuell zuordnen'}${track.label?` · ${track.label}`:''}`;
+  track.addEventListener('ended',()=>{
+    if(running){showError('Audioeingang getrennt. Bitte Mikrofon prüfen und eine neue Messung starten.');void stop();}
+  },{once:true});
   const Context=window.AudioContext||window.webkitAudioContext;
   if(!Context)throw new Error('Web Audio API nicht verfügbar.');
   audioContext=new Context({latencyHint:'interactive'});
@@ -327,6 +365,7 @@ async function startMicrophone(){
   }
 }
 async function start(){
+  if(probingMicrophones)return;
   if(running)return stop();
   if(session.phase==='complete'){
     resetReadings();
@@ -341,10 +380,12 @@ async function start(){
     return;
   }
   showError('');resetReadings();running=true;lastUpdate=0;
+  updateMicrophoneControls();
   updatePositionControls();
   updateSaveControls();
   updateSessionProgress();
   setStatus('Wird gestartet …');els.startBtn.disabled=true;
+  for(const key of ['resetBtn','demoTab','micTab'])els[key].disabled=true;
   try{
     if(mode==='demo'){
       createDemo();timer=setInterval(()=>feed(demonstrator.take(50,1)),50);
@@ -356,7 +397,7 @@ async function start(){
     console.error('Timegrapher start:',error);
     showError(error.name==='NotAllowedError'?'Mikrofonzugriff abgelehnt. Browserberechtigung prüfen.':`Mikrofonstart fehlgeschlagen: ${error.message}`);
     await stop();
-  }finally{els.startBtn.disabled=false;}
+  }finally{els.startBtn.disabled=false;for(const key of ['resetBtn','demoTab','micTab'])els[key].disabled=false;}
 }
 async function stop({completed=false}={}){
   const hadMeasurement=running;
@@ -378,6 +419,7 @@ async function stop({completed=false}={}){
       if(mode==='mic'){
         completedMeasurement={
           recorded_at:new Date().toISOString(),source:'crowniq',
+          ...measurementMicrophone,
           rate_s_per_day:result.rate,beat_error_ms:result.beatError,bph:result.bph,
           confidence_pct:result.confidence,quality:result.quality,
           duration_s:90,rate_spread_s_per_day:result.rateSpread,
@@ -397,6 +439,7 @@ async function stop({completed=false}={}){
     saveFeedback('Messung vorzeitig beendet. Für ein speicherbares Ergebnis sind alle 90 Sekunden erforderlich.',true);
   }
   running=false;
+  updateMicrophoneControls();
   updateSaveControls();
   updatePositionControls();
   if(timer!==null){clearInterval(timer);timer=null;}
@@ -432,9 +475,12 @@ async function restartDemo(){if(mode!=='demo')return;if(running){await stop();aw
 els.stabilityMode.addEventListener('change',e=>{
   stabilizer.setMode(e.target.value);
   displayReadings=null;trendSamples=[];lastTrendSample=-Infinity;
-  if(lastAnalysis)updateReadings(lastAnalysis);else resetReadings();
+  if(lastAnalysis)updateReadings(lastAnalysis);else if(!running)resetReadings();
   drawRateTrend();
 });
+els.refreshMicrophones.addEventListener('click',()=>refreshMicrophones(true));
+els.microphoneDevice.addEventListener('change',()=>{els.microphoneType.value='auto';els.microphoneStatus.textContent='Eingang geändert. Quelle wird beim nächsten Start geprüft.';});
+navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(!running&&!completedMeasurement)void refreshMicrophones();});
 els.calmBtn.addEventListener('click',()=>setTraceMode('calm'));
 els.detailBtn.addEventListener('click',()=>setTraceMode('detail'));
 els.demoTab.addEventListener('click',()=>changeMode('demo'));
@@ -458,3 +504,5 @@ changeMode('mic');
 setTraceMode('calm');
 els.stabilityMode.value=stabilizer.mode;
 loadCollectionWatches();
+
+void refreshMicrophones();

@@ -2,6 +2,14 @@ import type { NamespaceDict } from "./types";
 
 export const timegrapher: NamespaceDict = {
   en: {
+    "timegrapher.microphone.internal": "Internal microphone",
+    "timegrapher.microphone.usb": "External USB microphone / TGBC",
+    "timegrapher.microphone.unknown": "Unknown microphone",
+    "timegrapher.microphone.legacy": "Microphone not recorded",
+    "timegrapher.detection.label": "Detected from device name",
+    "timegrapher.detection.manual": "Manually assigned",
+    "timegrapher.detection.unknown": "Not detected",
+
     "timegrapher.title": "Timegrapher measurements",
     "timegrapher.manual": "Add manually",
     "timegrapher.measure": "New measurement",
@@ -51,6 +59,14 @@ export const timegrapher: NamespaceDict = {
     "timegrapher.deleteError": "Could not delete the measurement.",
   },
   de: {
+    "timegrapher.microphone.internal": "Internes Mikrofon",
+    "timegrapher.microphone.usb": "Externes USB-Mikrofon / TGBC",
+    "timegrapher.microphone.unknown": "Mikrofon unbekannt",
+    "timegrapher.microphone.legacy": "Mikrofon nicht erfasst",
+    "timegrapher.detection.label": "Anhand des Gerätenamens erkannt",
+    "timegrapher.detection.manual": "Manuell zugeordnet",
+    "timegrapher.detection.unknown": "Nicht erkannt",
+
     "timegrapher.title": "Zeitwaagen-Messungen",
     "timegrapher.manual": "Manuell hinzufügen",
     "timegrapher.measure": "Neue Messung",
@@ -100,6 +116,14 @@ export const timegrapher: NamespaceDict = {
     "timegrapher.deleteError": "Messung konnte nicht gelöscht werden.",
   },
   fr: {
+    "timegrapher.microphone.internal": "Microphone interne",
+    "timegrapher.microphone.usb": "Microphone USB externe / TGBC",
+    "timegrapher.microphone.unknown": "Microphone inconnu",
+    "timegrapher.microphone.legacy": "Microphone non enregistré",
+    "timegrapher.detection.label": "Détecté par le nom",
+    "timegrapher.detection.manual": "Attribution manuelle",
+    "timegrapher.detection.unknown": "Non détecté",
+
     "timegrapher.title": "Mesures au chronocomparateur",
     "timegrapher.manual": "Ajouter manuellement",
     "timegrapher.measure": "Nouvelle mesure",
@@ -149,11 +173,18 @@ export const timegrapher: NamespaceDict = {
     "timegrapher.deleteError": "Impossible de supprimer la mesure.",
   },
   es: {
+    "timegrapher.microphone.internal": "Micrófono interno",
+    "timegrapher.microphone.usb": "Micrófono USB externo / TGBC",
+    "timegrapher.microphone.unknown": "Micrófono desconocido",
+    "timegrapher.microphone.legacy": "Micrófono no registrado",
+    "timegrapher.detection.label": "Detectado por el nombre",
+    "timegrapher.detection.manual": "Asignado manualmente",
+    "timegrapher.detection.unknown": "No detectado",
+
     "timegrapher.title": "Mediciones del cronocomparador",
     "timegrapher.manual": "Añadir manualmente",
     "timegrapher.measure": "Nueva medición",
-    "timegrapher.experimental":
-      "Los valores del micrófono Crowniq son estimaciones sin calibrar.",
+    "timegrapher.experimental": "Los valores del micrófono Crowniq son estimaciones sin calibrar.",
     "timegrapher.loading": "Cargando mediciones …",
     "timegrapher.loadError": "No se pudieron cargar las mediciones.",
     "timegrapher.empty": "Todavía no hay mediciones para este reloj.",
@@ -192,8 +223,7 @@ export const timegrapher: NamespaceDict = {
     "timegrapher.invalidDate": "Introduce una fecha válida.",
     "timegrapher.delete": "Eliminar medición",
     "timegrapher.deleteTitle": "¿Eliminar esta medición?",
-    "timegrapher.deleteDescription":
-      "Solo se eliminará esta medición. No se puede deshacer.",
+    "timegrapher.deleteDescription": "Solo se eliminará esta medición. No se puede deshacer.",
     "timegrapher.deleted": "Medición eliminada",
     "timegrapher.deleteError": "No se pudo eliminar la medición.",
   },

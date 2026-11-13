@@ -31,6 +31,9 @@ type Measurement = {
   id: string;
   watch_id: string;
   source: "crowniq" | "manual";
+  microphone_type?: "internal" | "usb" | "unknown" | null;
+  microphone_label?: string | null;
+  microphone_detection?: "label" | "manual" | "unknown" | null;
   recorded_at: string;
   rate_s_per_day: number | null;
   beat_error_ms: number | null;
@@ -46,14 +49,7 @@ type Measurement = {
   beat_spread_ms: number | null;
 };
 
-const POSITIONS = [
-  "dial_up",
-  "dial_down",
-  "crown_up",
-  "crown_down",
-  "crown_left",
-  "crown_right",
-];
+const POSITIONS = ["dial_up", "dial_down", "crown_up", "crown_down", "crown_left", "crown_right"];
 const LOCALES = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES" } as const;
 
 function localDateTime() {
@@ -127,8 +123,7 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
   const numberOrNull = (value: string, min: number, max: number) => {
     if (!value.trim()) return null;
     const n = Number(value.trim().replace(",", "."));
-    if (!Number.isFinite(n) || n < min || n > max)
-      throw new Error(t("timegrapher.invalidNumber"));
+    if (!Number.isFinite(n) || n < min || n > max) throw new Error(t("timegrapher.invalidNumber"));
     return n;
   };
 
@@ -202,12 +197,7 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
     }
   };
 
-  const showNumber = (
-    value: number | null,
-    digits: number,
-    unit: string,
-    plus = false,
-  ) =>
+  const showNumber = (value: number | null, digits: number, unit: string, plus = false) =>
     value === null || !Number.isFinite(value)
       ? "—"
       : `${plus && value > 0 ? "+" : ""}${value.toLocaleString(locale, { maximumFractionDigits: digits })} ${unit}`;
@@ -230,28 +220,16 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
             <Plus className="h-4 w-4" /> {t("timegrapher.manual")}
           </Button>
           <Button size="sm" asChild>
-            <a
-              href={`/tools/timegrapher/index.html?watchId=${encodeURIComponent(watchId)}`}
-            >
+            <a href={`/tools/timegrapher/index.html?watchId=${encodeURIComponent(watchId)}`}>
               <Activity className="h-4 w-4" /> {t("timegrapher.measure")}
             </a>
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-xs text-muted-foreground">
-          {t("timegrapher.experimental")}
-        </p>
-        {loading && (
-          <p className="text-sm text-muted-foreground">
-            {t("timegrapher.loading")}
-          </p>
-        )}
-        {error && (
-          <p className="text-sm text-destructive">
-            {t("timegrapher.loadError")}
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">{t("timegrapher.experimental")}</p>
+        {loading && <p className="text-sm text-muted-foreground">{t("timegrapher.loading")}</p>}
+        {error && <p className="text-sm text-destructive">{t("timegrapher.loadError")}</p>}
         {!loading && !error && entries.length === 0 && (
           <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
             {t("timegrapher.empty")}
@@ -271,37 +249,34 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {t(`timegrapher.source.${entry.source}`)}
+                    {entry.source === "crowniq" &&
+                      ` · ${t(`timegrapher.microphone.${entry.microphone_type || "legacy"}`)}`}
+                    {entry.source === "crowniq" &&
+                      entry.microphone_detection &&
+                      ` · ${t(`timegrapher.detection.${entry.microphone_detection}`)}`}
+                    {entry.source === "crowniq" &&
+                      entry.microphone_label &&
+                      ` · ${entry.microphone_label}`}
                     {index === 0 && ` · ${t("timegrapher.latest")}`}
-                    {entry.position &&
-                      ` · ${t(`timegrapher.position.${entry.position}`)}`}
+                    {entry.position && ` · ${t(`timegrapher.position.${entry.position}`)}`}
                   </p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={t("timegrapher.delete")}
-                    >
+                    <Button size="icon" variant="ghost" aria-label={t("timegrapher.delete")}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        {t("timegrapher.deleteTitle")}
-                      </AlertDialogTitle>
+                      <AlertDialogTitle>{t("timegrapher.deleteTitle")}</AlertDialogTitle>
                       <AlertDialogDescription>
                         {t("timegrapher.deleteDescription")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>
-                        {t("timegrapher.cancel")}
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => void deleteEntry(entry.id)}
-                      >
+                      <AlertDialogCancel>{t("timegrapher.cancel")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => void deleteEntry(entry.id)}>
                         {t("timegrapher.delete")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -317,10 +292,7 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
                   label={t("timegrapher.beatError")}
                   value={showNumber(entry.beat_error_ms, 2, "ms")}
                 />
-                <Value
-                  label={t("timegrapher.bph")}
-                  value={showNumber(entry.bph, 0, "A/h")}
-                />
+                <Value label={t("timegrapher.bph")} value={showNumber(entry.bph, 0, "A/h")} />
                 {entry.amplitude_deg !== null && (
                   <Value
                     label={t("timegrapher.amplitude")}
@@ -359,9 +331,7 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
                 )}
               </div>
               {entry.notes && (
-                <p className="mt-3 whitespace-pre-wrap border-t pt-2 text-sm">
-                  {entry.notes}
-                </p>
+                <p className="mt-3 whitespace-pre-wrap border-t pt-2 text-sm">{entry.notes}</p>
               )}
             </div>
           ))}
@@ -476,9 +446,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label
-      className={`space-y-1 text-xs font-medium ${wide ? "col-span-2" : ""}`}
-    >
+    <label className={`space-y-1 text-xs font-medium ${wide ? "col-span-2" : ""}`}>
       <span>{label}</span>
       {children}
     </label>

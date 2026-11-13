@@ -62,7 +62,10 @@ CREATE INDEX IF NOT EXISTS idx_timegrapher_watch_date
     if 'case_coating' not in cols: c.execute('ALTER TABLE watches ADD COLUMN case_coating TEXT')
     # Additive migration for installations that already contain V0.5 measurements.
     measure_cols={r['name'] for r in c.execute('PRAGMA table_info(watch_timegrapher_measurements)')}
-    for field, column_type in (('duration_s','INTEGER'),('rate_spread_s_per_day','REAL'),('beat_spread_ms','REAL')):
+    for field, column_type in (('duration_s','INTEGER'),('rate_spread_s_per_day','REAL'),('beat_spread_ms','REAL'),
+                               ('microphone_type',"TEXT CHECK(microphone_type IN ('internal','usb','unknown'))"),
+                               ('microphone_label','TEXT'),
+                               ('microphone_detection',"TEXT CHECK(microphone_detection IN ('label','manual','unknown'))")):
         if field not in measure_cols:
             c.execute(f'ALTER TABLE watch_timegrapher_measurements ADD COLUMN {field} {column_type}')
     c.execute("INSERT OR IGNORE INTO profiles(id,display_name,created_at,updated_at) VALUES('local-user','',?,?)",(now(),now())); c.commit(); c.close()
