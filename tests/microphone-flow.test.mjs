@@ -17,7 +17,7 @@ test('capture integration: permission probe, 90s result payload, manual fallback
   const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Element()]));
   elements.microphoneType.value='auto';
   const position=new Element();position.dataset.position='dial_up';
-  globalThis.document={getElementById:id=>elements[id],querySelector:()=>new Element(),querySelectorAll:()=>[position]};
+  globalThis.document={body:new Element(),documentElement:{dataset:{}},getElementById:id=>elements[id],querySelector:()=>new Element(),querySelectorAll:()=>[position]};
   globalThis.Option=class {constructor(text,value){this.text=text;this.value=value;}};
   let track,node,saved,constraints,denied=false,label='TGBC USB Audio';
   const media={
@@ -57,8 +57,23 @@ test('capture integration: permission probe, 90s result payload, manual fallback
   await elements.saveMeasurementBtn.fire('click');
   assert.equal(saved.microphone_type,'usb');assert.equal(saved.microphone_label,'TGBC USB Audio');
   assert.equal(saved.microphone_detection,'label');assert.equal(saved.duration_s,90);
-  assert.equal(saved.source,'crowniq');assert.equal('deviceId' in saved,false);
-  await elements.resetBtn.fire('click');label='';elements.microphoneType.value='usb';
+  assert.equal(saved.source,'crowniq');assert.equal(saved.position,'dial_up');assert.equal('deviceId' in saved,false);
+  const quickResult={...saved};
+  await elements.resetBtn.fire('click');
+  await elements.expertView.fire('click');
+  position.dataset.position='crown_up';await position.fire('click');
+  await elements.startBtn.fire('click');
+  const expertDemo=new DemoSource(21600,8,.4,75321,{});
+  for(let i=0;i<1800;i++)node.port.onmessage({data:expertDemo.take(50,1)});
+  await new Promise(resolve=>setImmediate(resolve));
+  await elements.saveMeasurementBtn.fire('click');
+  assert.equal(saved.position,'crown_up');
+  for(const field of ['rate_s_per_day','beat_error_ms','bph','duration_s','quality','confidence_pct','rate_spread_s_per_day','beat_spread_ms'])assert.equal(saved[field],quickResult[field]);
+  await elements.resetBtn.fire('click');
+  await elements.quickView.fire('click');
+  // Quick mode must replace the previously selected expert position.
+  assert.equal(elements.selectedPosition.textContent,'Zifferblatt oben');
+  label='';elements.microphoneType.value='usb';
   await elements.startBtn.fire('click');
   assert.match(elements.microphoneStatus.textContent,/manuell zugeordnet/);
   track.ended();await new Promise(resolve=>setImmediate(resolve));

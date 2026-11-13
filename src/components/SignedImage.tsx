@@ -12,7 +12,11 @@ interface SignedImageProps {
 export function SignedImage({ path, alt, className }: SignedImageProps) {
   const [url, setUrl] = useState<string | null>(null);
 
+  const [failed, setFailed] = useState(false);
+
   useEffect(() => {
+    setFailed(false);
+    setUrl(null);
     let cancelled = false;
     if (!path) {
       setUrl(null);
@@ -26,18 +30,17 @@ export function SignedImage({ path, alt, className }: SignedImageProps) {
     };
   }, [path]);
 
-  if (!url) {
+  if (!url || failed) {
     return (
       <div
-        className={cn(
-          "flex items-center justify-center bg-muted text-muted-foreground",
-          className
-        )}
+        className={cn("flex items-center justify-center bg-muted text-muted-foreground", className)}
       >
         <WatchIcon className="h-8 w-8 opacity-40" />
       </div>
     );
   }
 
-  return <img src={url} alt={alt} className={className} loading="lazy" />;
+  return (
+    <img src={url} alt={alt} className={className} loading="lazy" onError={() => setFailed(true)} />
+  );
 }

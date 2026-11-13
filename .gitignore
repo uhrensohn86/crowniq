@@ -62,3 +62,6 @@ crowniq-data-backup-*/
 # Python test caches
 __pycache__/
 *.pyc
+
+# Temporary copies of private preview data
+.ui-copy-*/

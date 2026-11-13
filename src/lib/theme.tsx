@@ -18,16 +18,33 @@ function getInitialTheme(): Theme {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("ivory");
-  useEffect(() => setThemeState(getInitialTheme()), []);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
+    try {
+      setThemeState(getInitialTheme());
+    } catch {
+      /* Keep safe default. */
+    }
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
     const root = document.documentElement;
     root.classList.remove("dark", "theme-graphite", "theme-oled", "theme-timegrapher");
     if (theme !== "ivory") root.classList.add("dark", `theme-${theme}`);
-    try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
-  }, [theme]);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      /* Theme still works without persistent storage. */
+    }
+  }, [theme, ready]);
   const setTheme = (t: Theme) => setThemeState(t);
-  const toggleTheme = () => setThemeState((prev) => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length]);
-  return <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>{children}</ThemeContext.Provider>;
+  const toggleTheme = () => setThemeState((prev) => (prev === "ivory" ? "graphite" : "ivory"));
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 export function useTheme() {
   const ctx = useContext(ThemeContext);

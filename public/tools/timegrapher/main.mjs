@@ -1,10 +1,11 @@
+import {positionForView, readPreference} from './interface.mjs';
 import {describeMicrophone, microphoneConstraints, listMicrophones} from './microphone.mjs';
 import {EnvelopeBuffer, DemoSource} from './analyzer.mjs';
 import {calmPhasePoints, summarizeTrend} from './presentation.mjs';
 import {MeasurementStabilizer, PROFILES} from './stabilization.mjs';
 import {SessionCollector, WARMUP_MS, TOTAL_MS} from './session.mjs';
 const $=id=>document.getElementById(id);
-const fields=['microphoneDevice','microphoneType','refreshMicrophones','microphoneStatus','demoTab','micTab','demoPanel','demoOptions','micOptions','sourceTitle','sourceDescription','positionPicker','demoBph','demoScenario','status','startBtn','startText','startIcon','resetBtn','error','waveform','traceCanvas','traceStatus','traceScale','calmBtn','detailBtn','rateTrend','rawValues','trendHint','signalTag','signalLevel','detected','duration','quality','rms','audioInfo','candidates','reason','confidence','bph','bphHint','rate','beatError','score','scoreBar','stabilityMode','phaseLabel','phaseHint','gateBar','gateRemaining','watchSelect','saveMeasurementBtn','saveStatus','viewWatchLink','selectedPosition','sessionPhase','sessionTimer','sessionBar','sessionHint','finalSummary'];
+const fields=['quickView','expertView','themeToggle','microphoneControls','microphoneDevice','microphoneType','refreshMicrophones','microphoneStatus','demoTab','micTab','demoPanel','demoOptions','micOptions','sourceTitle','sourceDescription','positionPicker','demoBph','demoScenario','status','startBtn','startText','startIcon','resetBtn','error','waveform','traceCanvas','traceStatus','traceScale','calmBtn','detailBtn','rateTrend','rawValues','trendHint','signalTag','signalLevel','detected','duration','quality','rms','audioInfo','candidates','reason','confidence','bph','bphHint','rate','beatError','score','scoreBar','stabilityMode','phaseLabel','phaseHint','gateBar','gateRemaining','watchSelect','saveMeasurementBtn','saveStatus','viewWatchLink','selectedPosition','sessionPhase','sessionTimer','sessionBar','sessionHint','finalSummary'];
 const els=Object.fromEntries(fields.map(id=>[id,$(id)]));
 const buffer=new EnvelopeBuffer(1,20000);
 let mode='mic',running=false,timer=null,audioContext=null,stream=null,audioNode=null,gain=null;
@@ -17,11 +18,29 @@ const POSITION_NAMES=Object.freeze({
   crown_up:'Krone oben',crown_down:'Krone unten',
   crown_left:'Krone links',crown_right:'Krone rechts',
 });
-let chosenPosition=null;
+let interfaceView='quick', expertPosition=null;
+let chosenPosition=positionForView(interfaceView,expertPosition);
+function setInterfaceView(next){
+  if(running||probingMicrophones||completedMeasurement)return;
+  if(interfaceView==='expert')expertPosition=chosenPosition;
+  interfaceView=next==='expert'?'expert':'quick';
+  if(interfaceView==='quick'&&mode==='demo')changeMode('mic');
+  chosenPosition=positionForView(interfaceView,expertPosition);
+  document.body.classList.toggle('view-quick',interfaceView==='quick');
+  els.quickView.setAttribute('aria-pressed',String(interfaceView==='quick'));
+  els.expertView.setAttribute('aria-pressed',String(interfaceView==='expert'));
+  els.microphoneControls.open=interfaceView==='expert';
+  updatePositionControls();draw();
+}
+function setToolTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  try{window.localStorage.setItem('crowniq-theme',theme);}catch{}
+}
+
 let measurementMicrophone=null, probingMicrophones=false;
 function updateMicrophoneControls(){
   const locked=running||probingMicrophones||!!completedMeasurement;
-  for(const key of ['microphoneDevice','microphoneType','refreshMicrophones'])els[key].disabled=locked;
+  for(const key of ['quickView','expertView','microphoneDevice','microphoneType','refreshMicrophones'])els[key].disabled=locked;
   // Avoid competing asynchronous starts while the permission probe is open.
   els.startBtn.disabled=probingMicrophones;
 }
@@ -36,7 +55,7 @@ async function refreshMicrophones(requestPermission=false){
     els.microphoneDevice.replaceChildren(new Option('Browser-/Android-Standard',''));
     for(const [index,device] of devices.entries())els.microphoneDevice.add(new Option(device.label||`Mikrofon ${index+1} (Name nicht verfügbar)`,device.deviceId));
     if(devices.some(device=>device.deviceId===selected))els.microphoneDevice.value=selected;
-    else if(selected){els.microphoneType.value='auto';els.microphoneStatus.textContent='Vorheriger Eingang nicht mehr verfügbar. Bitte Eingang und Zuordnung erneut prüfen.';}
+    else if(selected){els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent='Vorheriger Eingang nicht mehr verfügbar. Bitte Eingang und Zuordnung erneut prüfen.';}
     if(requestPermission)els.microphoneStatus.textContent=devices.length?'Eingänge geladen. Quelle wird beim Messstart am aktiven Mikrofon geprüft.':'Browser liefert keine Geräteliste. Standard verwenden und Quelle manuell zuordnen.';
   }catch{
     els.microphoneStatus.textContent='Geräteerkennung nicht verfügbar oder Zugriff abgelehnt. Browserberechtigung prüfen; Standard und manuelle Zuordnung sind weiterhin wählbar.';
@@ -156,7 +175,7 @@ function changeMode(next){
   els.demoTab.classList.toggle('active',mode==='demo');els.micTab.classList.toggle('active',mode==='mic');
   els.demoTab.setAttribute('aria-pressed',mode==='demo');els.micTab.setAttribute('aria-pressed',mode==='mic');
   els.demoOptions.classList.toggle('hidden',mode!=='demo');els.micOptions.classList.toggle('hidden',mode!=='mic');
-  els.startText.textContent=mode==='demo'?'Demo starten':'Mikrofon starten';
+  els.startText.textContent=mode==='demo'?'Demo starten':'Messung starten';
   els.audioInfo.textContent=mode==='demo'?'Virtueller Signalgenerator':'Noch nicht geprüft';
 }
 function feed(samples){
@@ -370,7 +389,7 @@ async function start(){
   if(session.phase==='complete'){
     resetReadings();
     setStatus('Bereit');
-    els.startText.textContent=mode==='demo'?'Demo starten':'Mikrofon starten';
+    els.startText.textContent=mode==='demo'?'Demo starten':'Messung starten';
     els.startIcon.textContent='▶';
     saveFeedback('Neue Messung bereit. Bei Bedarf eine andere Lage wählen.');
     return;
@@ -449,7 +468,7 @@ async function stop({completed=false}={}){
   if(stream){for(const track of stream.getTracks())track.stop();stream=null;}
   if(audioContext){const context=audioContext;audioContext=null;try{await context.close();}catch{}}
   setStatus(completed?'Abgeschlossen':'Bereit');
-  els.startText.textContent=completed?'Neue Messung':mode==='demo'?'Demo starten':'Mikrofon starten';
+  els.startText.textContent=completed?'Neue Messung':mode==='demo'?'Demo starten':'Messung starten';
   els.startIcon.textContent='▶';
 }
 async function saveMeasurement(){
@@ -478,8 +497,16 @@ els.stabilityMode.addEventListener('change',e=>{
   if(lastAnalysis)updateReadings(lastAnalysis);else if(!running)resetReadings();
   drawRateTrend();
 });
+els.quickView.addEventListener('click',()=>setInterfaceView('quick'));
+els.expertView.addEventListener('click',()=>setInterfaceView('expert'));
+els.themeToggle.addEventListener('click',()=>setToolTheme(document.documentElement.dataset.theme==='ivory'?'graphite':'ivory'));
+els.microphoneType.addEventListener('change',()=>{
+  try{window.localStorage.setItem('crowniq-microphone-type',els.microphoneType.value);}catch{}
+  const names={auto:'Automatische Zuordnung beim Messstart',internal:'Internes Mikrofon · manuell zugeordnet',usb:'Externes USB-Mikrofon / TGBC · manuell zugeordnet',unknown:'Mikrofon unbekannt · manuell zugeordnet'};
+  els.microphoneStatus.textContent=names[els.microphoneType.value];
+});
 els.refreshMicrophones.addEventListener('click',()=>refreshMicrophones(true));
-els.microphoneDevice.addEventListener('change',()=>{els.microphoneType.value='auto';els.microphoneStatus.textContent='Eingang geändert. Quelle wird beim nächsten Start geprüft.';});
+els.microphoneDevice.addEventListener('change',()=>{els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent='Eingang geändert. Quelle wird beim nächsten Start geprüft.';});
 navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(!running&&!completedMeasurement)void refreshMicrophones();});
 els.calmBtn.addEventListener('click',()=>setTraceMode('calm'));
 els.detailBtn.addEventListener('click',()=>setTraceMode('detail'));
@@ -489,7 +516,7 @@ els.startBtn.addEventListener('click',start);
 els.resetBtn.addEventListener('click',async()=>{await stop();resetReadings();showError('');});
 for(const button of document.querySelectorAll('.position-option')){
   button.addEventListener('click',()=>{
-    if(running||completedMeasurement)return;
+    if(running||completedMeasurement||interfaceView==='quick')return;
     chosenPosition=button.dataset.position;
     updatePositionControls();
   });
@@ -501,6 +528,13 @@ els.demoScenario.addEventListener('change',restartDemo);
 window.addEventListener('pagehide',()=>{stop();});
 window.addEventListener('resize',draw);
 changeMode('mic');
+setInterfaceView('quick');
+let storage;
+try{storage=window.localStorage;}catch{}
+setToolTheme(readPreference(storage,'crowniq-theme',['ivory','graphite','oled','timegrapher'],'ivory'));
+els.microphoneType.value=readPreference(storage,'crowniq-microphone-type',['auto','internal','usb','unknown'],'auto');
+const remembered={auto:'Quelle wird beim Start geprüft. Bei Bedarf Mikrofon & Messquelle öffnen.',internal:'Internes Mikrofon · manuelle Zuordnung vorbelegt',usb:'Externes USB-Mikrofon / TGBC · manuelle Zuordnung vorbelegt',unknown:'Mikrofon unbekannt · manuelle Zuordnung vorbelegt'};
+els.microphoneStatus.textContent=remembered[els.microphoneType.value];
 setTraceMode('calm');
 els.stabilityMode.value=stabilizer.mode;
 loadCollectionWatches();

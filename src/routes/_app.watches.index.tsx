@@ -41,16 +41,24 @@ function WatchesIndex() {
   const locale = LOCALES[lang];
   const [watches, setWatches] = useState<WatchRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const readStorage = (key: string) => typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
-  const [view, setView] = useState<"grid" | "list">(() => readStorage("crowniq-watches-view") === "list" ? "list" : "grid");
+  const readStorage = (key: string) =>
+    typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+  const [view, setView] = useState<"grid" | "list">(() =>
+    readStorage("crowniq-watches-view") === "list" ? "list" : "grid",
+  );
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [movementFilter, setMovementFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>(() => {
     const saved = readStorage("crowniq-watches-sort-key") as SortKey | null;
-    return saved && ["brand", "purchase_date", "effective_price", "current_market_value"].includes(saved) ? saved : "brand";
+    return saved &&
+      ["brand", "purchase_date", "effective_price", "current_market_value"].includes(saved)
+      ? saved
+      : "brand";
   });
-  const [sortDir, setSortDir] = useState<"asc"|"desc">(() => readStorage("crowniq-watches-sort-dir") === "desc" ? "desc" : "asc");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() =>
+    readStorage("crowniq-watches-sort-dir") === "desc" ? "desc" : "asc",
+  );
   const isMobile = useIsMobile();
   const [cols, setCols] = useState<{ mobile: number; desktop: number }>(() => {
     const raw = readStorage("watch-grid-cols");
@@ -58,9 +66,11 @@ function WatchesIndex() {
       try {
         const p = JSON.parse(raw);
         if (p && typeof p.mobile === "number" && typeof p.desktop === "number") return p;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
-    return { mobile: 1, desktop: 4 };
+    return { mobile: 2, desktop: 4 };
   });
 
   const setColumns = (n: number) => {
@@ -70,36 +80,50 @@ function WatchesIndex() {
   };
   const activeCols = isMobile ? cols.mobile : cols.desktop;
 
-  useEffect(() => { localStorage.setItem("crowniq-watches-sort-key", sortKey); }, [sortKey]);
-  useEffect(() => { localStorage.setItem("crowniq-watches-sort-dir", sortDir); }, [sortDir]);
-  useEffect(() => { localStorage.setItem("crowniq-watches-view", view); }, [view]);
+  useEffect(() => {
+    localStorage.setItem("crowniq-watches-sort-key", sortKey);
+  }, [sortKey]);
+  useEffect(() => {
+    localStorage.setItem("crowniq-watches-sort-dir", sortDir);
+  }, [sortDir]);
+  useEffect(() => {
+    localStorage.setItem("crowniq-watches-view", view);
+  }, [view]);
 
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      supabase.from("watches").select("id,brand,model,reference_number,movement_type,case_material,purchase_date,final_price,current_market_value,primary_image_path,currency"),
+      supabase
+        .from("watches")
+        .select(
+          "id,brand,model,reference_number,movement_type,case_material,purchase_date,final_price,current_market_value,primary_image_path,currency",
+        ),
       supabase.from("watch_purchase_discounts").select("watch_id,amount"),
     ]).then(([watchResult, discountResult]) => {
-      const discountTotals = (discountResult.data ?? []).reduce<Record<string, number>>((acc, d: any) => {
-        acc[d.watch_id] = (acc[d.watch_id] ?? 0) + Number(d.amount ?? 0);
-        return acc;
-      }, {});
+      const discountTotals = (discountResult.data ?? []).reduce<Record<string, number>>(
+        (acc, d: any) => {
+          acc[d.watch_id] = (acc[d.watch_id] ?? 0) + Number(d.amount ?? 0);
+          return acc;
+        },
+        {},
+      );
       const rows = ((watchResult.data ?? []) as WatchRow[]).map((w) => ({
         ...w,
-        effective_price: w.final_price == null ? null : Math.max(0, Number(w.final_price) - (discountTotals[w.id] ?? 0)),
+        effective_price:
+          w.final_price == null
+            ? null
+            : Math.max(0, Number(w.final_price) - (discountTotals[w.id] ?? 0)),
       }));
       setWatches(rows);
       setLoading(false);
     });
   }, [user]);
 
-  const brands = useMemo(
-    () => Array.from(new Set(watches.map((w) => w.brand))).sort(),
-    [watches]
-  );
+  const brands = useMemo(() => Array.from(new Set(watches.map((w) => w.brand))).sort(), [watches]);
   const movements = useMemo(
-    () => Array.from(new Set(watches.map((w) => w.movement_type).filter(Boolean) as string[])).sort(),
-    [watches]
+    () =>
+      Array.from(new Set(watches.map((w) => w.movement_type).filter(Boolean) as string[])).sort(),
+    [watches],
   );
 
   const filtered = useMemo(() => {
@@ -116,10 +140,13 @@ function WatchesIndex() {
       })
       .sort((a, b) => {
         let cmp = 0;
-        if (sortKey === "brand") cmp = `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, locale);
-        else if (sortKey === "purchase_date") cmp = (a.purchase_date ?? "").localeCompare(b.purchase_date ?? "");
+        if (sortKey === "brand")
+          cmp = `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, locale);
+        else if (sortKey === "purchase_date")
+          cmp = (a.purchase_date ?? "").localeCompare(b.purchase_date ?? "");
         else {
-          const av = a[sortKey]; const bv = b[sortKey];
+          const av = a[sortKey];
+          const bv = b[sortKey];
           if (av == null && bv == null) cmp = 0;
           else if (av == null) cmp = 1;
           else if (bv == null) cmp = -1;
@@ -133,7 +160,7 @@ function WatchesIndex() {
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-semibold">{t("watches.title")}</h1>
+          <h1 className="font-display text-4xl font-semibold">{t("ui.watches")}</h1>
           <p className="text-muted-foreground">{t("watches.count", { n: watches.length })}</p>
         </div>
         <Button asChild>
@@ -154,34 +181,115 @@ function WatchesIndex() {
             className="pl-9"
           />
         </div>
-        <NativeSelect value={brandFilter} onChange={(e)=>setBrandFilter(e.target.value)} className="w-[160px]"><option value="all">{t("watches.allBrands")}</option>{brands.map((b)=><option key={b} value={b}>{b}</option>)}</NativeSelect>
-        <NativeSelect value={movementFilter} onChange={(e)=>setMovementFilter(e.target.value)} className="w-[160px]"><option value="all">{t("watches.allMovements")}</option>{movements.map((m)=><option key={m} value={m}>{t(`form.movementType.${m}`)}</option>)}</NativeSelect>
-        <NativeSelect value={sortKey} onChange={(e)=>setSortKey(e.target.value as SortKey)} className="w-[180px]"><option value="brand">{t("watches.sort.brandModel")}</option><option value="purchase_date">{t("watches.sort.purchaseDate")}</option><option value="effective_price">{t("watches.sort.purchasePrice")}</option><option value="current_market_value">{t("watches.sort.marketValue")}</option></NativeSelect><Button type="button" variant="outline" size="icon" onClick={()=>setSortDir((d)=>d==="asc"?"desc":"asc")} title={sortDir==="asc"?"Aufsteigend":"Absteigend"}>{sortDir==="asc"?<ArrowUp className="h-4 w-4"/>:<ArrowDown className="h-4 w-4"/>}</Button>
         <div className="flex rounded-md border border-border">
-          <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setView("grid")}>
+          <Button
+            variant={view === "grid" ? "secondary" : "ghost"}
+            size="icon"
+            aria-label={t("ui.grid")}
+            aria-pressed={view === "grid"}
+            onClick={() => setView("grid")}
+          >
             <LayoutGrid className="h-4 w-4" />
           </Button>
-          <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setView("list")}>
+          <Button
+            variant={view === "list" ? "secondary" : "ghost"}
+            size="icon"
+            aria-label={t("ui.list")}
+            aria-pressed={view === "list"}
+            onClick={() => setView("list")}
+          >
             <List className="h-4 w-4" />
           </Button>
         </div>
-        {view === "grid" && (
-          <div className="flex items-center gap-1 rounded-md border border-border px-2 py-1">
-            <Columns3 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            {(isMobile ? [1, 2, 3, 4] : [2, 3, 4, 5, 6]).map((n) => (
-              <Button
-                key={n}
-                variant={activeCols === n ? "secondary" : "ghost"}
-                size="sm"
-                className="h-7 w-7 p-0 font-mono text-xs"
-                onClick={() => setColumns(n)}
-                title={t("watches.columns", { n })}
-              >
-                {n}
-              </Button>
+      </div>
+      <details className="collection-filters">
+        <summary className="cursor-pointer text-sm font-medium">{t("ui.filters")}</summary>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <NativeSelect
+            value={brandFilter}
+            onChange={(e) => setBrandFilter(e.target.value)}
+            className="w-[160px]"
+          >
+            <option value="all">{t("watches.allBrands")}</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
             ))}
-          </div>
-        )}
+          </NativeSelect>
+          <NativeSelect
+            value={movementFilter}
+            onChange={(e) => setMovementFilter(e.target.value)}
+            className="w-[160px]"
+          >
+            <option value="all">{t("watches.allMovements")}</option>
+            {movements.map((m) => (
+              <option key={m} value={m}>
+                {t(`form.movementType.${m}`)}
+              </option>
+            ))}
+          </NativeSelect>
+          <NativeSelect
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="w-[180px]"
+          >
+            <option value="brand">{t("watches.sort.brandModel")}</option>
+            <option value="purchase_date">{t("watches.sort.purchaseDate")}</option>
+            <option value="effective_price">{t("watches.sort.purchasePrice")}</option>
+            <option value="current_market_value">{t("watches.sort.marketValue")}</option>
+          </NativeSelect>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            title={sortDir === "asc" ? "Aufsteigend" : "Absteigend"}
+          >
+            {sortDir === "asc" ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : (
+              <ArrowDown className="h-4 w-4" />
+            )}
+          </Button>
+          {view === "grid" && (
+            <div className="flex items-center gap-1 rounded-md border border-border px-2 py-1">
+              <Columns3 className="h-4 w-4 shrink-0 text-muted-foreground" />
+              {(isMobile ? [1, 2, 3, 4] : [2, 3, 4, 5, 6]).map((n) => (
+                <Button
+                  key={n}
+                  variant={activeCols === n ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 w-7 p-0 font-mono text-xs"
+                  onClick={() => setColumns(n)}
+                  title={t("watches.columns", { n })}
+                >
+                  {n}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      </details>
+      <div className="movement-chips" role="group" aria-label={t("watches.allMovements")}>
+        <button
+          type="button"
+          aria-pressed={movementFilter === "all"}
+          onClick={() => setMovementFilter("all")}
+        >
+          {t("ui.all")} ({watches.length})
+        </button>
+        {movements.map((movement) => (
+          <button
+            type="button"
+            key={movement}
+            aria-pressed={movementFilter === movement}
+            onClick={() => setMovementFilter(movement)}
+          >
+            {t(`form.movementType.${movement}`)} (
+            {watches.filter((watch) => watch.movement_type === movement).length})
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -199,22 +307,30 @@ function WatchesIndex() {
         >
           {filtered.map((w) => (
             <Link key={w.id} to="/watches/$id" params={{ id: w.id }}>
-              <Card className="overflow-hidden transition hover:shadow-lg hover:-translate-y-0.5 pt-0">
-                <div className="aspect-square overflow-hidden bg-muted">
-                  <SignedImage path={w.primary_image_path} alt={`${w.brand} ${w.model}`} className="h-full w-full object-cover" />
+              <article className={`photo-watch-card ${activeCols >= 4 ? "is-small" : ""}`}>
+                <div className="photo">
+                  <SignedImage
+                    path={w.primary_image_path}
+                    alt={`${w.brand} ${w.model}`}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-                <CardContent className={activeCols >= 4 ? "p-2" : "p-4"}>
-                  <div className="truncate text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{w.brand}</div>
-                  <div className={`truncate font-display leading-tight ${activeCols >= 4 ? "text-sm" : "text-lg"}`}>{w.model}</div>
-                  {w.reference_number && activeCols < 4 && (
-                    <div className="mt-1 truncate font-mono text-xs text-muted-foreground">{t("watches.reference", { ref: w.reference_number })}</div>
+                <div className="photo-caption">
+                  <div className="photo-brand">{w.brand}</div>
+                  <div className="photo-model">{w.model}</div>
+                  {activeCols < 4 && (
+                    <div className="photo-meta">
+                      {w.movement_type ? t(`form.movementType.${w.movement_type}`) : "—"}
+                    </div>
                   )}
-                  <div className="mt-2 flex items-center justify-between gap-2 text-sm">
-                    {activeCols < 4 && <span className="truncate text-muted-foreground">{w.movement_type ? t(`form.movementType.${w.movement_type}`) : "—"}</span>}
-                    <span className={`ml-auto shrink-0 font-mono ${activeCols >= 4 ? "text-xs" : ""}`}>{formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}</span>
+                  {w.reference_number && activeCols < 4 && (
+                    <div className="photo-meta truncate">{w.reference_number}</div>
+                  )}
+                  <div className="photo-meta mt-1 tabular-nums">
+                    {formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </article>
             </Link>
           ))}
         </div>
@@ -236,15 +352,25 @@ function WatchesIndex() {
                 {filtered.map((w) => (
                   <tr key={w.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
-                      <Link to="/watches/$id" params={{ id: w.id }} className="font-medium hover:underline">
+                      <Link
+                        to="/watches/$id"
+                        params={{ id: w.id }}
+                        className="font-medium hover:underline"
+                      >
                         {w.brand} <span className="text-muted-foreground">{w.model}</span>
                       </Link>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs">{w.reference_number ?? "—"}</td>
-                    <td className="px-4 py-3">{w.movement_type ? t(`form.movementType.${w.movement_type}`) : "—"}</td>
+                    <td className="px-4 py-3">
+                      {w.movement_type ? t(`form.movementType.${w.movement_type}`) : "—"}
+                    </td>
                     <td className="px-4 py-3">{w.case_material ?? "—"}</td>
-                    <td className="px-4 py-3 text-right font-mono">{formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}</td>
-                    <td className="px-4 py-3 text-right font-mono">{formatCurrency(w.current_market_value, w.currency ?? "EUR", locale)}</td>
+                    <td className="px-4 py-3 text-right font-mono">
+                      {formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono">
+                      {formatCurrency(w.current_market_value, w.currency ?? "EUR", locale)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

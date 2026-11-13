@@ -37,13 +37,9 @@
   --font-body: "Inter", system-ui, sans-serif;
 }
 
-@layer base {
-  @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
-}
-
 /* Crowniq themes: Ivory, Graphite, OLED */
 :root {
-  --radius: 0.65rem;
+  --radius: 1.25rem;
   --background: oklch(0.965 0.012 82); --foreground: oklch(0.20 0.015 55);
   --card: oklch(0.99 0.006 82); --card-foreground: var(--foreground);
   --popover: oklch(0.995 0.004 82); --popover-foreground: var(--foreground);
@@ -109,4 +105,52 @@
   --border: #33445d; --input: #33445d; --ring: #55c5a8;
   --chart-1: #55c5a8; --chart-2: #dbaa69; --chart-3: #85b9db;
   --chart-4: #9876c2; --chart-5: #e18f92;
+}
+
+/* Phase 2: local fonts, warm surfaces and a reachable mobile dock. */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+body { margin: 0; }
+.app-header { border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--card) 70%, transparent); }
+.app-main { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
+.app-main h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.1; margin-bottom: .5rem; }
+.app-main [data-slot="card"] { box-shadow: 0 3px 14px #00000007; }
+.floating-dock { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px), 580px); display: flex; gap: 3px; padding: 7px; border: 1px solid var(--border); border-radius: 28px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 10px 35px #00000026; backdrop-filter: blur(20px); }
+.dock-link { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 58px; padding: 6px 1px; border-radius: 21px; color: var(--muted-foreground); text-decoration: none; font-size: clamp(9px, 2.35vw, 11px); font-weight: 500; }
+.dock-link.is-active, .desktop-link.is-active { background: color-mix(in srgb, var(--accent) 24%, var(--card)); color: var(--foreground); }
+.dock-link.is-active svg { color: var(--primary); }
+.desktop-link { display: flex; align-items: center; gap: 7px; padding: 10px; border-radius: 12px; font-size: 13px; color: var(--muted-foreground); }
+.dock-link:hover, .desktop-link:hover { background: var(--secondary); color: var(--foreground); }
+.dock-link:focus-visible, .gallery-control:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.photo-watch-card { position: relative; overflow: hidden; border-radius: 23px; background: #222; color: #fff; border: 1px solid var(--border); min-width: 0; }
+.photo-watch-card .photo { aspect-ratio: 3 / 4; min-height: 150px; }
+.photo-watch-card .photo-caption { position: absolute; inset: auto 0 0; padding: 38px 13px 15px; background: linear-gradient(transparent, #000c 35%, #000e); }
+.photo-watch-card .photo-caption:before { content: ''; position: absolute; left: 0; top: 44px; bottom: 18px; width: 3px; border-radius: 3px; background: var(--accent); }
+.photo-watch-card .photo-brand { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #e5d6bc; }
+.photo-watch-card .photo-model { font-size: clamp(15px, 2vw, 21px); line-height: 1.2; font-weight: 600; overflow-wrap: anywhere; margin: 4px 0 6px; }
+.photo-watch-card .photo-meta { font-size: 11px; color: #e3dfd8; overflow-wrap: anywhere; }
+.photo-watch-card.is-small .photo-caption { padding: 30px 7px 8px; }
+.photo-watch-card.is-small .photo-model { font-size: 12px; }
+.photo-watch-card.is-small .photo-brand { font-size: 9px; }
+.collection-filters { padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; }
+.movement-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.movement-chips button { flex-shrink: 0; border: 1px solid var(--border); border-radius: 999px; padding: 9px 15px; font-size: 12px; }
+.movement-chips button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.recent-watch { display: grid; grid-template-columns: minmax(110px, .85fr) 1.3fr; overflow: hidden; border: 1px solid var(--border); border-radius: 24px; background: var(--card); }
+.recent-watch .recent-image { min-height: 180px; height: 100%; width: 100%; object-fit: cover; }
+.recent-watch .recent-copy { padding: clamp(16px, 3vw, 30px); align-self: center; min-width: 0; }
+.quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quick-links a { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); background: var(--card); border-radius: 18px; padding: 18px 14px; font-size: 13px; }
+.quick-links svg { flex-shrink: 0; color: var(--primary); }
+.detail-jumps { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.detail-jumps a { white-space: nowrap; border-radius: 999px; background: var(--secondary); padding: 10px 16px; font-size: 13px; }
+.watch-detail section, .watch-detail [id] { scroll-margin-top: 20px; }
+.gallery-dialog { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); height: 100dvh; }
+.gallery-control { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid #ffffff45; border-radius: 50%; background: #181818bf; color: white; cursor: pointer; }
+@media (min-width: 1024px) { .floating-dock { display: none; } .app-main { padding-bottom: 3rem; } }
+@media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior: auto !important; transition: none !important; } }
+@media(min-width:768px) {
+  .photo-watch-card.is-small .photo-model { font-size:20px; }
+  .photo-watch-card.is-small .photo-caption { padding:38px 15px 15px; }
+  .photo-watch-card.is-small .photo-brand { font-size:11px; }
 }

@@ -112,3 +112,72 @@ button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:foc
 .demo-advanced .tabbar{margin:11px 0}
 .demo-advanced .tab{font-size:12px}
 .demo-advanced .options{padding:3px 0 0}
+
+/* Phase 2 presentation. The signal processing modules are unchanged. */
+:root { --bg:#f6f2eb; --surface:#fffdf8; --stroke:#ddd4c7; --text:#29241e; --sub:#70675d; --accent:#9a6c28; --accentDark:#f0dfbe; --danger:#ad2838; color-scheme:light; }
+:root[data-theme="graphite"], :root[data-theme="oled"] { --bg:#141517; --surface:#202124; --stroke:#3b3b3d; --text:#f3eee4; --sub:#b9b3a9; --accent:#e1b364; --accentDark:#4a3b25; --danger:#ffabab; color-scheme:dark; }
+:root[data-theme="oled"] { --bg:#000; --surface:#111; --stroke:#303030; }
+:root[data-theme="timegrapher"] { --bg:#0b1220; --surface:#162238; --stroke:#33445d; --text:#e9f0f7; --sub:#aebfce; --accent:#55c5a8; --accentDark:#213149; --danger:#ffabab; color-scheme:dark; }
+body { background:var(--bg); }
+h1,h2 { font-family:Georgia,serif; }
+.topbar { border-color:var(--stroke); background:var(--surface); height:auto; min-height:70px; gap:12px; padding-top:10px; padding-bottom:10px; }
+.brand-icon { background:var(--accentDark); }
+.panel { background:var(--surface); border-color:var(--stroke); border-radius:23px; box-shadow:0 3px 14px #00000007; }
+.layout { padding-bottom:calc(115px + env(safe-area-inset-bottom)); }
+.view-switch { display:flex; gap:5px; padding:5px; border:1px solid var(--stroke); border-radius:18px; margin:24px 0 14px; width:fit-content; background:var(--surface); }
+.view-switch button { padding:11px 17px; border:0; border-radius:13px; background:transparent; color:var(--sub); }
+.view-switch button[aria-pressed="true"] { background:var(--accentDark); color:var(--text); font-weight:650; }
+.quick-only { display:none; }
+.view-quick .quick-only { display:block; }
+.view-quick .expert-only { display:none!important; }
+.view-quick .columns { display:flex; flex-direction:column; max-width:680px; margin:0 auto; }
+.view-quick .maincol,.view-quick .sidecol { display:contents; }
+.view-quick .sourcepanel { order:0; }
+.view-quick .resultpanel { order:1; }
+.view-quick .associationpanel { order:2; }
+.view-quick .intro { max-width:680px; margin-left:auto; margin-right:auto; }
+.view-quick .big-value { margin:15px 0; }
+.view-quick .big-value strong { font-size:40px; }
+.view-quick .disclaimer { font-size:11px; }
+.view-quick .final-summary { font-size:12px; }
+#microphoneControls { width:100%; margin-top:16px; }
+#microphoneControls summary { cursor:pointer; font-weight:600; padding:10px 0; }
+#microphoneStatus { margin:4px 0 0; overflow-wrap:anywhere; }
+.secondary, .options select, .stability-selection select, .associationpanel select { background:var(--bg); border:1px solid var(--stroke); color:var(--text); border-radius:12px; padding:10px 12px; }
+.primary { background:var(--accent); border-color:var(--accent); color:var(--bg); }
+.primary:hover { background:var(--accent); filter:brightness(1.08); }
+.secondary:hover { background:var(--accentDark); }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.crowniq-back { background:var(--bg); color:var(--text); border-color:var(--stroke); }
+.crowniq-back:hover { background:var(--accentDark); color:var(--text); }
+.measure,.diagnostic>div,.stability-selection,.gate-info,.position-picker,.session-progress,.demo-advanced,.final-summary { background:var(--bg); border-color:var(--stroke); }
+.measure>span,.scoreline,.status,.stability-selection label,.gate-top strong,.gate-top span,.gate-info p,.associationpanel label,.position-heading,.position-heading span,.session-progress-top,.session-progress p { color:var(--sub); }
+.position-option { background:var(--surface); color:var(--text); border-color:var(--stroke); }
+.position-option.selected { background:var(--accentDark); color:var(--text); border-color:var(--accent); }
+.pill,.pill.lab,.tabbar { background:var(--bg); color:var(--sub); }
+.notice,.signal-reason,.privacy { background:var(--accentDark); color:var(--text); border-color:var(--accent); }
+.session-track,.gate-track,.progress { background:var(--stroke); }
+.session-track>span,.gate-track>span { background:var(--accent); }
+.final-summary { color:var(--text); }
+.final-summary.warning,.error { background:color-mix(in srgb,var(--danger) 10%,var(--surface)); color:var(--danger); border-color:var(--danger); }
+.help ol { color:var(--sub); }
+.tool-dock { position:fixed; z-index:40; bottom:calc(12px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; gap:3px; width:min(calc(100% - 24px),580px); padding:7px; border:1px solid var(--stroke); border-radius:28px; background:var(--surface); box-shadow:0 10px 35px #0003; }
+.tool-dock a { flex:1; min-width:0; display:flex; align-items:center; flex-direction:column; justify-content:center; gap:5px; min-height:58px; border-radius:21px; font-size:clamp(9px,2.35vw,11px); color:var(--sub); text-decoration:none; }
+.tool-dock a span { font-size:22px; line-height:24px; }
+.tool-dock a[aria-current] { background:var(--accentDark); color:var(--text); }
+@media(max-width:790px) { .associationpanel { order:6; } }
+.position-heading strong,.session-progress-top strong,.session-progress-top span { color:var(--text); }
+.demo-advanced summary,.demo-advanced[open] summary,.demo-advanced summary span,.association-status { color:var(--sub); }
+.watch-picto { color:var(--sub); }
+.position-option.selected .watch-picto { color:var(--accent); }
+.position-option:hover { background:var(--accentDark); border-color:var(--accent); }
+.position-option.selected { box-shadow:inset 0 0 0 1px var(--accent); }
+.watch-picto .watch-round,.watch-picto.side .watch-body { box-shadow:none; }
+.watch-picto.side .watch-crown { background:var(--stroke); }
+.tab { color:var(--sub); }
+.tab.active { background:var(--accentDark); color:var(--text); }
+#themeToggle { min-width:44px; min-height:44px; font-size:20px; }
+/* Plot surfaces remain dark for the diagnostic line colours in all themes. */
+.chartwrap,.trend-chart { color-scheme:dark; }
+.tool-dock svg { width:20px; height:20px; }
+.brand b { font-family:Georgia,serif; font-size:25px; text-transform:none; letter-spacing:-.5px; }

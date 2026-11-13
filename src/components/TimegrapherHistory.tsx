@@ -248,15 +248,9 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
                     {formatRecordedAt(entry.recorded_at, locale)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {t(`timegrapher.source.${entry.source}`)}
-                    {entry.source === "crowniq" &&
-                      ` · ${t(`timegrapher.microphone.${entry.microphone_type || "legacy"}`)}`}
-                    {entry.source === "crowniq" &&
-                      entry.microphone_detection &&
-                      ` · ${t(`timegrapher.detection.${entry.microphone_detection}`)}`}
-                    {entry.source === "crowniq" &&
-                      entry.microphone_label &&
-                      ` · ${entry.microphone_label}`}
+                    {entry.source === "crowniq"
+                      ? t(`timegrapher.microphone.${entry.microphone_type || "legacy"}`)
+                      : t("timegrapher.source.manual")}
                     {index === 0 && ` · ${t("timegrapher.latest")}`}
                     {entry.position && ` · ${t(`timegrapher.position.${entry.position}`)}`}
                   </p>
@@ -283,6 +277,17 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+              {entry.source === "crowniq" &&
+                (entry.microphone_label || entry.microphone_detection) && (
+                  <details className="mb-3 text-xs text-muted-foreground">
+                    <summary className="cursor-pointer">{t("ui.sourceDetails")}</summary>
+                    <p className="mt-1 break-words">
+                      {entry.microphone_detection &&
+                        t(`timegrapher.detection.${entry.microphone_detection}`)}
+                      {entry.microphone_label && ` · ${entry.microphone_label}`}
+                    </p>
+                  </details>
+                )}
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
                 <Value
                   label={t("timegrapher.rate")}
