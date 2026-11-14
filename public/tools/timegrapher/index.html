@@ -6,23 +6,23 @@
   <meta name="theme-color" content="#0b1220">
   <title>Crowniq — Zeitwaage</title>
   <meta name="description" content="Lokaler Timegrapher-Versuch mit automatischer Schlagzahlerkennung und Ganglinien">
-  <link rel="stylesheet" href="./style.css?v=ui2">
+  <link rel="stylesheet" href="./style.css?v=ui2-polish1">
 </head>
 <body class="view-quick">
   <header class="topbar">
-    <div class="brand"><div class="brand-icon">◷</div><div><b>CROWNIQ</b><span>ZEITWAAGE</span></div></div>
-    <div class="crowniq-bridge"><a href="/dashboard" class="crowniq-back">← Crowniq</a><button type="button" class="secondary" id="themeToggle" aria-label="Hell-/Dunkelmodus wechseln">◐</button></div>
+    <a href="/dashboard" class="brand" aria-label="Crowniq Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M9 5V2h6v3M9 19v3h6v-3M12 8v4l2 1"/></svg><b>Crowniq</b></a>
+    <div class="crowniq-bridge"><a href="/watches/new" class="header-icon" aria-label="Neue Uhr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a><button type="button" class="header-icon" id="themeToggle" aria-label="Hell-/Dunkelmodus wechseln"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg></button><a href="/dashboard" class="crowniq-back expert-only">← Zurück</a></div>
   </header>
   <main class="layout">
     <section class="intro">
-      <div class="eyebrow">LOKALES MESSLABOR</div>
-      <h1>Zeitwaage<span>.</span></h1>
-      <p>Ein ruhiger Moment für deine Uhr. 90 Sekunden, vollständig lokal.</p>
+      <div class="eyebrow expert-only">LOKALES MESSLABOR</div>
+      <h1>Zeitwaage</h1>
+      <p class="expert-only">Ein ruhiger Moment für deine Uhr. 90 Sekunden, vollständig lokal.</p>
       <div class="view-switch" role="group" aria-label="Bedienansicht">
         <button type="button" id="quickView" aria-pressed="true">Schnelle Messung</button>
         <button type="button" id="expertView" aria-pressed="false">Expertenmodus</button>
       </div>
-      <p class="quick-only quick-instruction">Uhr mit Zifferblatt nach oben auflegen. Die Lage wird automatisch gespeichert.</p>
+      <p class="quick-only quick-instruction">Zifferblatt oben · 90 Sekunden · lokal</p>
     </section>
     <div class="columns">
       <div class="maincol">
@@ -177,7 +177,8 @@
           <p id="trendHint" class="trend-hint expert-only">Warte auf eine stabile Messung.</p>
           <div class="scoreline"><span>Detektor-Plausibilität</span><b id="score">—</b></div>
           <div class="progress"><span id="scoreBar"></span></div>
-          <p class="disclaimer"><b>Experimentell:</b> Live-Werte bleiben unkalibrierte Schätzungen. Das Endergebnis wird aus drei voneinander getrennten 20-Sekunden-Abschnitten berechnet und nur bei ausreichender Übereinstimmung freigegeben. Die Signalplausibilität ist kein Nachweis der Messgenauigkeit. Mehrere Messungen mit einer Referenz vergleichen.</p>
+          <p class="quick-only compact-disclaimer">Experimentelle Schätzwerte · Speichern nur nach bestandener Qualitätsprüfung.</p>
+          <p class="disclaimer expert-only"><b>Experimentell:</b> Live-Werte bleiben unkalibrierte Schätzungen. Das Endergebnis wird aus drei voneinander getrennten 20-Sekunden-Abschnitten berechnet und nur bei ausreichender Übereinstimmung freigegeben. Die Signalplausibilität ist kein Nachweis der Messgenauigkeit. Mehrere Messungen mit einer Referenz vergleichen.</p>
         </section>
         <section class="panel help expert-only">
           <h2>Erster Test mit deiner Uhr</h2>
@@ -199,5 +200,5 @@
     </nav>
     <footer>Crowniq Zeitwaage · Experimentelle Messwerte · Zuordnung zur Uhrensammlung möglich</footer>
   </main>
-  <script type="module" src="./main.mjs?v=ui2"></script>
+  <script type="module" src="./main.mjs?v=ui2-polish1"></script>
 </body></html>

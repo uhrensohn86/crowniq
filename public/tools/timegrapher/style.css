@@ -181,3 +181,50 @@ button:disabled { opacity:.5; cursor:not-allowed; }
 .chartwrap,.trend-chart { color-scheme:dark; }
 .tool-dock svg { width:20px; height:20px; }
 .brand b { font-family:Georgia,serif; font-size:25px; text-transform:none; letter-spacing:-.5px; }
+
+/* Smartphone polish: fewer repeated labels, same measurement controls and results. */
+.topbar { padding:16px max(16px,calc((100vw - 1232px)/2)); min-height:0; }
+.brand { color:var(--text); text-decoration:none; gap:12px; }
+.brand>svg { width:32px; height:32px; color:var(--accent); }
+.brand b { font-size:30px; letter-spacing:-.3px; }
+.crowniq-bridge { gap:4px; }
+.header-icon { width:36px; height:36px; display:grid; place-items:center; padding:8px; background:transparent; color:var(--text); border:0; border-radius:12px; text-decoration:none; }
+.header-icon:hover { background:var(--accentDark); }
+.header-icon svg { width:20px; height:20px; }
+#themeToggle { min-width:36px; min-height:36px; }
+.theme-sun { display:none; }
+:root:not([data-theme="ivory"]) .theme-sun { display:block; }
+:root:not([data-theme="ivory"]) .theme-moon { display:none; }
+.view-quick .layout { padding-top:16px; }
+.view-quick .intro { margin-top:0; margin-bottom:12px; }
+.view-quick h1 { font-size:30px; margin:0 0 10px; letter-spacing:-.5px; }
+.view-quick .view-switch { margin:0 0 8px; width:100%; }
+.view-quick .view-switch button { flex:1; padding:9px 8px; font-size:13px; min-height:40px; }
+.view-quick .quick-instruction { font-size:12px; }
+.view-quick .columns { gap:12px; }
+.view-quick .panel { padding:14px 16px; border-radius:20px; }
+.view-quick #sourceTitle,.view-quick #sourceDescription { display:none; }
+.view-quick .sourcepanel { position:relative; }
+.view-quick .sourcepanel>.panel-top { position:absolute; right:16px; top:22px; }
+.view-quick #microphoneControls { margin-top:0; }
+.view-quick #microphoneControls summary { padding:5px 80px 5px 0; font-size:13px; min-height:32px; }
+.view-quick #microphoneStatus { font-size:11px; line-height:1.4; }
+.view-quick .actions { margin-top:12px; gap:8px; }
+.view-quick .actions button { min-height:44px; padding:9px 12px; font-size:13px; }
+.view-quick #startBtn { flex:1; }
+.view-quick .session-progress { margin-top:10px; padding:9px 10px; }
+.view-quick #sessionHint { display:none; }
+.view-quick .session-track { margin:8px 0 0; height:6px; }
+.view-quick .resultpanel { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 8px; }
+.view-quick .results-head { grid-column:1/-1; }
+.view-quick .results-head h2 { font-size:17px; }
+.view-quick .big-value { margin:0; text-align:left; }
+.view-quick .big-value>span,.view-quick .measure>span { display:block; font-size:10px; min-height:28px; }
+.view-quick .big-value>div,.view-quick .measure div { display:flex; flex-wrap:wrap; gap:2px 4px; justify-content:flex-start; align-items:baseline; margin:0; }
+.view-quick .big-value strong,.view-quick .measure b { font-size:23px; line-height:1.3; letter-spacing:-.6px; }
+.view-quick .big-value>div span,.view-quick .measure small { font-size:10px; }
+.view-quick .measure-grid { display:contents; }
+.view-quick .measure { padding:0; background:transparent; border:0; }
+.view-quick #bphHint,.view-quick .scoreline,.view-quick .progress { display:none; }
+.view-quick .compact-disclaimer { grid-column:1/-1; margin:0; font-size:10px; line-height:1.4; color:var(--sub); }
+.view-quick #finalSummary { grid-column:1/-1; order:1; margin:0; }

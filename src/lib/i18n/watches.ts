@@ -4,6 +4,7 @@ export const watches: NamespaceDict = {
   en: {
     "watches.title": "Collection",
     "watches.count": "{n} watches",
+    "watches.countOne": "1 watch",
     "watches.new": "New watch",
     "watches.searchPlaceholder": "Search by brand, model, reference …",
     "watches.brand": "Brand",
@@ -30,7 +31,8 @@ export const watches: NamespaceDict = {
     "watches.edit": "Edit",
     "watches.delete": "Delete",
     "watches.deleteConfirmTitle": "Delete watch?",
-    "watches.deleteConfirmDescription": "This action cannot be undone. All images will be deleted as well.",
+    "watches.deleteConfirmDescription":
+      "This action cannot be undone. All images will be deleted as well.",
     "watches.cancel": "Cancel",
     "watches.deleteFailed": "Failed to delete",
     "watches.deleted": "Watch deleted",
@@ -71,6 +73,7 @@ export const watches: NamespaceDict = {
   de: {
     "watches.title": "Sammlung",
     "watches.count": "{n} Uhren",
+    "watches.countOne": "1 Uhr",
     "watches.new": "Neue Uhr",
     "watches.searchPlaceholder": "Suche nach Marke, Modell, Referenz …",
     "watches.brand": "Marke",
@@ -97,7 +100,8 @@ export const watches: NamespaceDict = {
     "watches.edit": "Bearbeiten",
     "watches.delete": "Löschen",
     "watches.deleteConfirmTitle": "Uhr löschen?",
-    "watches.deleteConfirmDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Alle Bilder werden ebenfalls gelöscht.",
+    "watches.deleteConfirmDescription":
+      "Diese Aktion kann nicht rückgängig gemacht werden. Alle Bilder werden ebenfalls gelöscht.",
     "watches.cancel": "Abbrechen",
     "watches.deleteFailed": "Löschen fehlgeschlagen",
     "watches.deleted": "Uhr gelöscht",
@@ -138,6 +142,7 @@ export const watches: NamespaceDict = {
   fr: {
     "watches.title": "Collection",
     "watches.count": "{n} montres",
+    "watches.countOne": "1 montre",
     "watches.new": "Nouvelle montre",
     "watches.searchPlaceholder": "Rechercher par marque, modèle, référence …",
     "watches.brand": "Marque",
@@ -164,7 +169,8 @@ export const watches: NamespaceDict = {
     "watches.edit": "Modifier",
     "watches.delete": "Supprimer",
     "watches.deleteConfirmTitle": "Supprimer la montre ?",
-    "watches.deleteConfirmDescription": "Cette action est irréversible. Toutes les images seront également supprimées.",
+    "watches.deleteConfirmDescription":
+      "Cette action est irréversible. Toutes les images seront également supprimées.",
     "watches.cancel": "Annuler",
     "watches.deleteFailed": "Échec de la suppression",
     "watches.deleted": "Montre supprimée",
@@ -205,6 +211,7 @@ export const watches: NamespaceDict = {
   es: {
     "watches.title": "Colección",
     "watches.count": "{n} relojes",
+    "watches.countOne": "1 reloj",
     "watches.new": "Nuevo reloj",
     "watches.searchPlaceholder": "Buscar por marca, modelo, referencia …",
     "watches.brand": "Marca",
@@ -231,7 +238,8 @@ export const watches: NamespaceDict = {
     "watches.edit": "Editar",
     "watches.delete": "Eliminar",
     "watches.deleteConfirmTitle": "¿Eliminar reloj?",
-    "watches.deleteConfirmDescription": "Esta acción no se puede deshacer. Todas las imágenes también se eliminarán.",
+    "watches.deleteConfirmDescription":
+      "Esta acción no se puede deshacer. Todas las imágenes también se eliminarán.",
     "watches.cancel": "Cancelar",
     "watches.deleteFailed": "Error al eliminar",
     "watches.deleted": "Reloj eliminado",

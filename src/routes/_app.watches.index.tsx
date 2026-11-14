@@ -161,7 +161,9 @@ function WatchesIndex() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl font-semibold">{t("ui.watches")}</h1>
-          <p className="text-muted-foreground">{t("watches.count", { n: watches.length })}</p>
+          <p className="text-muted-foreground">
+            {t(watches.length === 1 ? "watches.countOne" : "watches.count", { n: watches.length })}
+          </p>
         </div>
         <Button asChild>
           <Link to="/watches/new">
@@ -318,17 +320,17 @@ function WatchesIndex() {
                 <div className="photo-caption">
                   <div className="photo-brand">{w.brand}</div>
                   <div className="photo-model">{w.model}</div>
-                  {activeCols < 4 && (
-                    <div className="photo-meta">
-                      {w.movement_type ? t(`form.movementType.${w.movement_type}`) : "—"}
-                    </div>
+                  {activeCols < 4 && w.movement_type && (
+                    <div className="photo-meta">{t(`form.movementType.${w.movement_type}`)}</div>
                   )}
                   {w.reference_number && activeCols < 4 && (
                     <div className="photo-meta truncate">{w.reference_number}</div>
                   )}
-                  <div className="photo-meta mt-1 tabular-nums">
-                    {formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}
-                  </div>
+                  {w.effective_price != null && (
+                    <div className="photo-meta mt-1 tabular-nums">
+                      {formatCurrency(w.effective_price, w.currency ?? "EUR", locale)}
+                    </div>
+                  )}
                 </div>
               </article>
             </Link>
