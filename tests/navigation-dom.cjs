@@ -1,0 +1,41 @@
+// CROWNIQ_UI_TEST_MODULES=/path/to/node_modules node tests/navigation-dom.cjs
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const {mkdtempSync,rmSync}=require('node:fs');
+const {tmpdir}=require('node:os');
+const {JSDOM}=require(path.join(process.env.CROWNIQ_UI_TEST_MODULES || '../node_modules','jsdom'));
+const esbuild=require('esbuild');
+const temp=mkdtempSync(path.join(tmpdir(),'crowniq-nav-'));
+const dom=new JSDOM('<html><body><div id="root"></div></body></html>',{url:'http://localhost/timegrapher'});
+for(const key of ['window','document','HTMLElement','Element','Node','Event','MouseEvent','getComputedStyle'])global[key]=dom.window[key];
+Object.defineProperty(global,'navigator',{value:dom.window.navigator,configurable:true});
+global.IS_REACT_ACT_ENVIRONMENT=true;
+global.requestAnimationFrame=fn=>setTimeout(fn,0);global.cancelAnimationFrame=clearTimeout;
+let disconnected=false;
+global.ResizeObserver=class{observe(){} disconnect(){disconnected=true;}};
+global.testNavigate=options=>{global.destination=options.to;};
+(async()=>{
+ await esbuild.build({stdin:{contents:`export {createElement,act} from 'react';export {createRoot} from 'react-dom/client';export {Route} from './src/routes/_app.timegrapher';`,resolveDir:path.resolve(__dirname,'..'),loader:'tsx'},bundle:true,platform:'node',format:'cjs',outfile:path.join(temp,'route.cjs'),jsx:'automatic',plugins:[{name:'route-context',setup(build){
+ build.onResolve({filter:/^@tanstack\/react-router$|^@\/lib\/theme$/},args=>({path:args.path,namespace:'test-context'}));
+ build.onLoad({filter:/.*/,namespace:'test-context'},args=>({contents:args.path.includes('react-router')?`export const createFileRoute=()=>config=>({...config,useSearch:()=>({watchId:'synthetic-watch'})});export const useNavigate=()=>globalThis.testNavigate;`:`export const useTheme=()=>({theme:'graphite'});`,loader:'js'}));
+ }}]});
+ const {createElement:h,act,createRoot,Route}=require(path.join(temp,'route.cjs'));
+ const root=createRoot(document.querySelector('#root'));
+ await act(async()=>{root.render(h(Route.component));});
+ const frame=document.querySelector('iframe');
+ assert.match(frame.src,/embedded=1&watchId=synthetic-watch/);
+ const doc=frame.contentDocument;
+ doc.open();doc.write('<html><body></body></html>');doc.close();
+ doc.body.innerHTML='<main class="layout"><a href="/watches/synthetic-watch">Uhr ansehen</a></main>';
+ doc.querySelector('.layout').getBoundingClientRect=()=>({height:840});
+ let stopped=false;frame.contentWindow.addEventListener('pagehide',()=>{stopped=true;});
+ await act(async()=>{frame.dispatchEvent(new Event('load'));});
+ assert.equal(frame.style.visibility,'visible');assert.equal(frame.style.height,'842px');
+ assert.equal(doc.documentElement.dataset.theme,'graphite');
+ const click=new doc.defaultView.MouseEvent('click',{bubbles:true,cancelable:true});
+ await act(async()=>{doc.querySelector('a').dispatchEvent(click);});
+ assert.equal(click.defaultPrevented,true);assert.equal(global.destination,'/watches/synthetic-watch');
+ await act(async()=>root.unmount());
+ assert.equal(stopped,true);assert.equal(disconnected,true);
+ console.log('PASS: embedded watch context, content height, theme, internal return navigation, pagehide and observer cleanup');
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>{dom.window.close();rmSync(temp,{recursive:true,force:true});process.exit(process.exitCode||0);});

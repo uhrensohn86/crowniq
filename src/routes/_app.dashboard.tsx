@@ -243,10 +243,10 @@ function Dashboard() {
       <section className="space-y-3">
         <h2 className="font-display text-2xl font-semibold">{t("ui.quickAccess")}</h2>
         <div className="quick-links">
-          <a href="/tools/timegrapher/index.html">
+          <Link to="/timegrapher">
             <Activity className="h-5 w-5" />
             {t("ui.measure")}
-          </a>
+          </Link>
           <Link to="/watches/new">
             <Plus className="h-5 w-5" />
             {t("nav.newWatch")}

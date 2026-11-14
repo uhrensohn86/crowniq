@@ -228,3 +228,9 @@ button:disabled { opacity:.5; cursor:not-allowed; }
 .view-quick #bphHint,.view-quick .scoreline,.view-quick .progress { display:none; }
 .view-quick .compact-disclaimer { grid-column:1/-1; margin:0; font-size:10px; line-height:1.4; color:var(--sub); }
 .view-quick #finalSummary { grid-column:1/-1; order:1; margin:0; }
+
+/* The React shell owns navigation and spacing in the integrated view. */
+.embedded .topbar,.embedded .tool-dock,.embedded footer { display:none!important; }
+.embedded body { background:var(--bg); }
+.embedded .layout { max-width:none; padding:0; }
+.embedded .intro { margin-top:0; }

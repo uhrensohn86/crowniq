@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Activity, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -220,9 +221,9 @@ export function TimegrapherHistory({ watchId }: { watchId: string }) {
             <Plus className="h-4 w-4" /> {t("timegrapher.manual")}
           </Button>
           <Button size="sm" asChild>
-            <a href={`/tools/timegrapher/index.html?watchId=${encodeURIComponent(watchId)}`}>
+            <Link to="/timegrapher" search={{ watchId }}>
               <Activity className="h-4 w-4" /> {t("timegrapher.measure")}
-            </a>
+            </Link>
           </Button>
         </div>
       </CardHeader>

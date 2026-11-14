@@ -346,6 +346,7 @@ async function startMicrophone(){
   if(!window.isSecureContext)throw new Error('Lokale Adresse wird nicht als sicherer Kontext erkannt. http://[::1]:3000/tools/timegrapher/ öffnen.');
   if(!navigator.mediaDevices?.getUserMedia)throw new Error('Mikrofon-API fehlt in diesem Browser. Firefox oder Chrome verwenden.');
   stream=await navigator.mediaDevices.getUserMedia(microphoneConstraints(els.microphoneDevice.value));
+  if(!running){for(const track of stream.getTracks())track.stop();stream=null;return;}
   const track=stream.getAudioTracks()[0];
   if(!track||track.readyState==='ended')throw new Error('Kein aktiver Audioeingang.');
   measurementMicrophone=describeMicrophone(track,els.microphoneType.value);
@@ -358,10 +359,12 @@ async function startMicrophone(){
   if(!Context)throw new Error('Web Audio API nicht verfügbar.');
   audioContext=new Context({latencyHint:'interactive'});
   await audioContext.resume();
+  if(!running)return;
   const input=audioContext.createMediaStreamSource(stream);
   gain=audioContext.createGain();gain.gain.value=0;
   if(audioContext.audioWorklet&&window.AudioWorkletNode){
     await audioContext.audioWorklet.addModule('./audio-processor.js');
+    if(!running)return;
     audioNode=new AudioWorkletNode(audioContext,'crowniq-envelope');
     audioNode.port.onmessage=e=>{if(Array.isArray(e.data))feed(e.data);};
     input.connect(audioNode);audioNode.connect(gain);gain.connect(audioContext.destination);
@@ -410,6 +413,7 @@ async function start(){
       createDemo();timer=setInterval(()=>feed(demonstrator.take(50,1)),50);
       els.audioInfo.textContent='Virtueller Signalgenerator · 1 ms';
     }else await startMicrophone();
+    if(!running)return;
     setStatus(mode==='demo'?'Demo läuft':'Mikrofon aktiv',true);
     els.startText.textContent='Messung beenden';els.startIcon.textContent='■';animation();
   }catch(error){

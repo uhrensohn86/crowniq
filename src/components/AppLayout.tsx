@@ -23,7 +23,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { to: "/watches", label: t("ui.watches"), icon: Watch },
     { to: "/wear", label: t("ui.wear"), icon: CalendarDays },
-    { to: "/tools/timegrapher/index.html", label: t("ui.timegrapher"), icon: Activity },
+    { to: "/timegrapher", label: t("ui.timegrapher"), icon: Activity },
     { to: "/settings", label: t("nav.settings"), icon: Settings },
   ];
   function links(mobile: boolean) {
@@ -39,11 +39,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <span>{label}</span>
         </>
       );
-      return to.startsWith("/tools/") ? (
-        <a key={to} href={to} {...props}>
-          {content}
-        </a>
-      ) : (
+      return (
         <Link key={to} to={to} {...props}>
           {content}
         </Link>

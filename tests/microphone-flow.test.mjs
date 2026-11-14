@@ -37,7 +37,8 @@ test('capture integration: permission probe, 90s result payload, manual fallback
     createGain(){return {gain:{},connect(){},disconnect(){}};}
   }
   globalThis.AudioWorkletNode=class {port={};constructor(){node=this;}connect(){}disconnect(){}};
-  globalThis.window={location:{search:'?watchId=w'},isSecureContext:true,AudioContext,AudioWorkletNode:globalThis.AudioWorkletNode,addEventListener(){}};
+  const windowEvents={};
+  globalThis.window={location:{search:'?watchId=w'},isSecureContext:true,AudioContext,AudioWorkletNode:globalThis.AudioWorkletNode,addEventListener(name,fn){windowEvents[name]=fn;}};
   globalThis.fetch=async(url,options)=>{
     if(options?.method==='POST'){saved=JSON.parse(options.body);return {ok:true,json:async()=>({data:[saved]})};}
     return {ok:true,json:async()=>({data:[{id:'w',brand:'Test',model:'Synthetic'}]})};
@@ -83,4 +84,20 @@ test('capture integration: permission probe, 90s result payload, manual fallback
   try{await elements.startBtn.fire('click');}finally{console.error=originalError;}
   assert.match(elements.error.textContent,/abgelehnt/);
   assert.equal(elements.microphoneType.disabled,false);assert.equal(elements.saveMeasurementBtn.disabled,true);
+  // Leaving the integrated route releases a live microphone.
+  denied=false;
+  await elements.startBtn.fire('click');
+  windowEvents.pagehide();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(track.readyState,'ended');
+  // Permission may resolve after navigation; that stream must also be released.
+  let release;
+  const originalGetUserMedia=media.getUserMedia;
+  media.getUserMedia=async c=>{await new Promise(resolve=>{release=resolve;});return originalGetUserMedia(c);};
+  const pending=elements.startBtn.fire('click');
+  windowEvents.pagehide();
+  release();await pending;
+  assert.equal(track.readyState,'ended');
+  assert.equal(elements.saveMeasurementBtn.disabled,true);
+
 });

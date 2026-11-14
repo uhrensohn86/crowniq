@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppTimegrapherRouteImport } from './routes/_app.timegrapher'
 import { Route as AppWearRouteImport } from './routes/_app.wear'
 import { Route as AppWatchesIndexRouteImport } from './routes/_app.watches.index'
 import { Route as AppWatchesNewRouteImport } from './routes/_app.watches.new'
@@ -36,6 +37,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTimegrapherRoute = AppTimegrapherRouteImport.update({
+  id: '/timegrapher',
+  path: '/timegrapher',
   getParentRoute: () => AppRoute,
 } as any)
 const AppWearRoute = AppWearRouteImport.update({
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
+  '/timegrapher': typeof AppTimegrapherRoute
   '/wear': typeof AppWearRoute
   '/watches/new': typeof AppWatchesNewRoute
   '/watches/': typeof AppWatchesIndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
+  '/timegrapher': typeof AppTimegrapherRoute
   '/wear': typeof AppWearRoute
   '/watches/new': typeof AppWatchesNewRoute
   '/watches': typeof AppWatchesIndexRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/timegrapher': typeof AppTimegrapherRoute
   '/_app/wear': typeof AppWearRoute
   '/_app/watches/new': typeof AppWatchesNewRoute
   '/_app/watches/': typeof AppWatchesIndexRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/settings'
+    | '/timegrapher'
     | '/wear'
     | '/watches/new'
     | '/watches/'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/settings'
+    | '/timegrapher'
     | '/wear'
     | '/watches/new'
     | '/watches'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/dashboard'
     | '/_app/settings'
+    | '/_app/timegrapher'
     | '/_app/wear'
     | '/_app/watches/new'
     | '/_app/watches/'
@@ -163,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/timegrapher': {
+      id: '/_app/timegrapher'
+      path: '/timegrapher'
+      fullPath: '/timegrapher'
+      preLoaderRoute: typeof AppTimegrapherRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/wear': {
@@ -206,6 +225,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppTimegrapherRoute: typeof AppTimegrapherRoute
   AppWearRoute: typeof AppWearRoute
   AppWatchesNewRoute: typeof AppWatchesNewRoute
   AppWatchesIndexRoute: typeof AppWatchesIndexRoute
@@ -216,6 +236,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppTimegrapherRoute: AppTimegrapherRoute,
   AppWearRoute: AppWearRoute,
   AppWatchesNewRoute: AppWatchesNewRoute,
   AppWatchesIndexRoute: AppWatchesIndexRoute,

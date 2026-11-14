@@ -1,12 +1,16 @@
 <!doctype html>
 <html lang="de">
 <head>
+  <script>
+    if (new URLSearchParams(location.search).get('embedded') === '1') document.documentElement.classList.add('embedded');
+    try { document.documentElement.dataset.theme = localStorage.getItem('crowniq-theme') || 'ivory'; } catch { document.documentElement.dataset.theme = 'ivory'; }
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <title>Crowniq — Zeitwaage</title>
   <meta name="description" content="Lokaler Timegrapher-Versuch mit automatischer Schlagzahlerkennung und Ganglinien">
-  <link rel="stylesheet" href="./style.css?v=ui2-polish1">
+  <link rel="stylesheet" href="./style.css?v=ui2-nav1">
 </head>
 <body class="view-quick">
   <header class="topbar">
@@ -200,5 +204,5 @@
     </nav>
     <footer>Crowniq Zeitwaage · Experimentelle Messwerte · Zuordnung zur Uhrensammlung möglich</footer>
   </main>
-  <script type="module" src="./main.mjs?v=ui2-polish1"></script>
+  <script type="module" src="./main.mjs?v=ui2-nav1"></script>
 </body></html>
