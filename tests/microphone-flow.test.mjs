@@ -38,12 +38,13 @@ test('capture integration: permission probe, 90s result payload, manual fallback
   }
   globalThis.AudioWorkletNode=class {port={};constructor(){node=this;}connect(){}disconnect(){}};
   const windowEvents={};
-  globalThis.window={location:{search:'?watchId=w'},isSecureContext:true,AudioContext,AudioWorkletNode:globalThis.AudioWorkletNode,addEventListener(name,fn){windowEvents[name]=fn;}};
+  globalThis.window={location:{search:'?watchId=w&lang='+(process.env.CROWNIQ_TEST_LANG||'de')},isSecureContext:true,AudioContext,AudioWorkletNode:globalThis.AudioWorkletNode,addEventListener(name,fn){windowEvents[name]=fn;}};
   globalThis.fetch=async(url,options)=>{
     if(options?.method==='POST'){saved=JSON.parse(options.body);return {ok:true,json:async()=>({data:[saved]})};}
     return {ok:true,json:async()=>({data:[{id:'w',brand:'Test',model:'Synthetic'}]})};
   };
   await import('../public/tools/timegrapher/main.mjs');
+  const {tr}=await import('../public/tools/timegrapher/localization.mjs');
   await new Promise(resolve=>setImmediate(resolve));
   await elements.refreshMicrophones.fire('click');
   assert.equal(track.readyState,'ended');
@@ -73,16 +74,16 @@ test('capture integration: permission probe, 90s result payload, manual fallback
   await elements.resetBtn.fire('click');
   await elements.quickView.fire('click');
   // Quick mode must replace the previously selected expert position.
-  assert.equal(elements.selectedPosition.textContent,'Zifferblatt oben');
+  assert.equal(elements.selectedPosition.textContent,tr('Zifferblatt oben'));
   label='';elements.microphoneType.value='usb';
   await elements.startBtn.fire('click');
-  assert.match(elements.microphoneStatus.textContent,/manuell zugeordnet/);
+  assert.ok(elements.microphoneStatus.textContent.includes(tr('manuell zugeordnet')));
   track.ended();await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(elements.saveMeasurementBtn.disabled,true);assert.match(elements.error.textContent,/getrennt/);
+  assert.equal(elements.saveMeasurementBtn.disabled,true);assert.equal(elements.error.textContent,tr('Audioeingang getrennt. Bitte Mikrofon prüfen und eine neue Messung starten.'));
   await elements.resetBtn.fire('click');denied=true;
   const originalError=console.error;console.error=()=>{};
   try{await elements.startBtn.fire('click');}finally{console.error=originalError;}
-  assert.match(elements.error.textContent,/abgelehnt/);
+  assert.equal(elements.error.textContent,tr('Mikrofonzugriff abgelehnt. Browserberechtigung prüfen.'));
   assert.equal(elements.microphoneType.disabled,false);assert.equal(elements.saveMeasurementBtn.disabled,true);
   // Leaving the integrated route releases a live microphone.
   denied=false;

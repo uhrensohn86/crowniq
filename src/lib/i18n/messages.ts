@@ -1,3 +1,4 @@
+import { settingsExtra } from "./settings-extra";
 import { ui } from "./ui";
 import { common } from "./common";
 import { dashboard } from "./dashboard";
@@ -7,7 +8,16 @@ import { form } from "./form";
 import { timegrapher } from "./timegrapher";
 import { LANGS, type Dict, type Lang, type NamespaceDict } from "./types";
 
-const namespaces: NamespaceDict[] = [common, dashboard, watches, wear, form, timegrapher, ui];
+const namespaces: NamespaceDict[] = [
+  common,
+  dashboard,
+  watches,
+  wear,
+  form,
+  timegrapher,
+  ui,
+  settingsExtra,
+];
 
 export const messages = LANGS.reduce(
   (acc, lang) => {

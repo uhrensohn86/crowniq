@@ -154,3 +154,8 @@ body { margin: 0; }
   .photo-watch-card.is-small .photo-caption { padding:38px 15px 15px; }
   .photo-watch-card.is-small .photo-brand { font-size:11px; }
 }
+
+/* Keep the dock above Firefox's dynamic toolbar; labels never overlap. */
+.floating-dock[style*="--dock-top"] { top:var(--dock-top); bottom:auto; }
+.dock-link span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dock-link { padding-inline:3px; }

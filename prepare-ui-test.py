@@ -41,7 +41,9 @@ def main():
                 connection.settimeout(0.3)
                 if connection.connect_ex((host, port)) == 0:
                     raise RuntimeError('Crowniq zuerst mit Strg+C stoppen; Port ist noch belegt.')
-    source = Path.home() / 'crowniq-ui-polish' / 'data'
+    source = Path.home() / 'crowniq-ui-navigation' / 'data'
+    if not source.is_dir():
+        source = Path.home() / 'crowniq-ui-polish' / 'data'
     if not source.is_dir():
         source = Path.home() / 'crowniq-ui-test' / 'data'
     if not source.is_dir():

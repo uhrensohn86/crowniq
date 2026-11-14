@@ -2,6 +2,16 @@ import type { NamespaceDict } from "./types";
 
 export const ui: NamespaceDict = {
   en: {
+    "ui.theme.ivory": "Ivory",
+    "ui.theme.graphite": "Graphite",
+    "ui.theme.timegrapher": "Timegrapher",
+    "ui.notFound": "Page not found",
+    "ui.notFoundHint": "This page does not exist or has moved.",
+    "ui.home": "Go to home",
+    "ui.theme.oled": "OLED",
+
+    "ui.loadingTimegrapher": "Loading timegrapher …",
+    "ui.timegrapherShort": "Timegrapher",
     "ui.watches": "Watches",
     "ui.wear": "Wear",
     "ui.timegrapher": "Timegrapher",
@@ -26,6 +36,16 @@ export const ui: NamespaceDict = {
     "ui.wearEmpty": "Record a wear day to see your latest watch here.",
   },
   de: {
+    "ui.theme.ivory": "Elfenbein",
+    "ui.theme.graphite": "Graphit",
+    "ui.theme.timegrapher": "Zeitwaage",
+    "ui.notFound": "Seite nicht gefunden",
+    "ui.notFoundHint": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "ui.home": "Zur Startseite",
+    "ui.theme.oled": "OLED",
+
+    "ui.loadingTimegrapher": "Zeitwaage wird geladen …",
+    "ui.timegrapherShort": "Zeitwaage",
     "ui.watches": "Uhren",
     "ui.wear": "Tragen",
     "ui.timegrapher": "Zeitwaage",
@@ -50,6 +70,16 @@ export const ui: NamespaceDict = {
     "ui.wearEmpty": "Trage einen Tragetag ein, um hier deine zuletzt getragene Uhr zu sehen.",
   },
   fr: {
+    "ui.theme.ivory": "Ivoire",
+    "ui.theme.graphite": "Graphite",
+    "ui.theme.timegrapher": "Chronocomparateur",
+    "ui.notFound": "Page introuvable",
+    "ui.notFoundHint": "Cette page n’existe pas ou a été déplacée.",
+    "ui.home": "Accueil",
+    "ui.theme.oled": "OLED",
+
+    "ui.loadingTimegrapher": "Chargement du chronocomparateur…",
+    "ui.timegrapherShort": "Mesure",
     "ui.watches": "Montres",
     "ui.wear": "Port",
     "ui.timegrapher": "Chronocomparateur",
@@ -74,6 +104,16 @@ export const ui: NamespaceDict = {
     "ui.wearEmpty": "Enregistrez un jour de port pour voir votre dernière montre ici.",
   },
   es: {
+    "ui.theme.ivory": "Marfil",
+    "ui.theme.graphite": "Grafito",
+    "ui.theme.timegrapher": "Cronocomparador",
+    "ui.notFound": "Página no encontrada",
+    "ui.notFoundHint": "Esta página no existe o se ha movido.",
+    "ui.home": "Ir al inicio",
+    "ui.theme.oled": "OLED",
+
+    "ui.loadingTimegrapher": "Cargando cronocomparador…",
+    "ui.timegrapherShort": "Medición",
     "ui.watches": "Relojes",
     "ui.wear": "Uso",
     "ui.timegrapher": "Cronocomparador",

@@ -1,25 +1,32 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { ThemeProvider } from "@/lib/theme";
-import { I18nProvider } from "@/lib/i18n";
+import { I18nProvider, useI18n } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
+    <I18nProvider>
+      <NotFoundContent />
+    </I18nProvider>
+  );
+}
+
+function NotFoundContent() {
+  const { t } = useI18n();
+  return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl font-semibold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Seite nicht gefunden</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Die gesuchte Seite existiert nicht oder wurde verschoben.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t("ui.notFound")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t("ui.notFoundHint")}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Zur Startseite
+            {t("ui.home")}
           </Link>
         </div>
       </div>
@@ -33,12 +40,20 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Crowniq — Every Watch. Every Wear." },
-      { name: "description", content: "Katalogisiere deine Uhrensammlung mit Bildern, technischen Daten, Anschaffungskosten und Wear-Tracking." },
+      {
+        name: "description",
+        content:
+          "Katalogisiere deine Uhrensammlung mit Bildern, technischen Daten, Anschaffungskosten und Wear-Tracking.",
+      },
       { property: "og:site_name", content: "Crowniq" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }, { rel: "manifest", href: "/manifest.webmanifest" }, { rel: "icon", href: "/crowniq-icon.svg" }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/crowniq-icon.svg" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -53,7 +68,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <script dangerouslySetInnerHTML={{ __html: `if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));`,
+          }}
+        />
         <Scripts />
       </body>
     </html>
@@ -70,4 +89,3 @@ function RootComponent() {
     </ThemeProvider>
   );
 }
-

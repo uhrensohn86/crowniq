@@ -16,14 +16,14 @@ global.ResizeObserver=class{observe(){} disconnect(){disconnected=true;}};
 global.testNavigate=options=>{global.destination=options.to;};
 (async()=>{
  await esbuild.build({stdin:{contents:`export {createElement,act} from 'react';export {createRoot} from 'react-dom/client';export {Route} from './src/routes/_app.timegrapher';`,resolveDir:path.resolve(__dirname,'..'),loader:'tsx'},bundle:true,platform:'node',format:'cjs',outfile:path.join(temp,'route.cjs'),jsx:'automatic',plugins:[{name:'route-context',setup(build){
- build.onResolve({filter:/^@tanstack\/react-router$|^@\/lib\/theme$/},args=>({path:args.path,namespace:'test-context'}));
- build.onLoad({filter:/.*/,namespace:'test-context'},args=>({contents:args.path.includes('react-router')?`export const createFileRoute=()=>config=>({...config,useSearch:()=>({watchId:'synthetic-watch'})});export const useNavigate=()=>globalThis.testNavigate;`:`export const useTheme=()=>({theme:'graphite'});`,loader:'js'}));
+ build.onResolve({filter:/^@tanstack\/react-router$|^@\/lib\/(theme|i18n)$/},args=>({path:args.path,namespace:'test-context'}));
+ build.onLoad({filter:/.*/,namespace:'test-context'},args=>({contents:args.path.includes('react-router')?`export const createFileRoute=()=>config=>({...config,useSearch:()=>({watchId:'synthetic-watch'})});export const useNavigate=()=>globalThis.testNavigate;`:args.path.endsWith('i18n')?`export const useI18n=()=>({lang:'fr',t:key=>key});`:`export const useTheme=()=>({theme:'graphite'});`,loader:'js'}));
  }}]});
  const {createElement:h,act,createRoot,Route}=require(path.join(temp,'route.cjs'));
  const root=createRoot(document.querySelector('#root'));
  await act(async()=>{root.render(h(Route.component));});
  const frame=document.querySelector('iframe');
- assert.match(frame.src,/embedded=1&watchId=synthetic-watch/);
+ assert.match(frame.src,/embedded=1&lang=fr&watchId=synthetic-watch/);
  const doc=frame.contentDocument;
  doc.open();doc.write('<html><body></body></html>');doc.close();
  doc.body.innerHTML='<main class="layout"><a href="/watches/synthetic-watch">Uhr ansehen</a></main>';

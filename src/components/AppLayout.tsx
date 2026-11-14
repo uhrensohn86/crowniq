@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useDockPosition } from "@/lib/useDockPosition";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 
 export function AppLayout({ children }: { children: ReactNode }) {
+  const dock = useRef<HTMLElement>(null);
+  useDockPosition(dock);
   const { theme, toggleTheme } = useTheme();
   const { t } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -31,12 +34,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
       const active = pathname.startsWith(to);
       const props = {
         className: cn(mobile ? "dock-link" : "desktop-link", active && "is-active"),
+        "aria-label": label,
+        title: label,
         "aria-current": active ? ("page" as const) : undefined,
       };
       const content = (
         <>
           <Icon aria-hidden="true" className="h-5 w-5 shrink-0" />
-          <span>{label}</span>
+          <span>{mobile && to === "/timegrapher" ? t("ui.timegrapherShort") : label}</span>
         </>
       );
       return (
@@ -76,7 +81,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="app-main mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10">{children}</main>
-      <nav className="floating-dock lg:hidden" aria-label={t("ui.navigation")}>
+      <nav ref={dock} className="floating-dock lg:hidden" aria-label={t("ui.navigation")}>
         {links(true)}
       </nav>
     </div>

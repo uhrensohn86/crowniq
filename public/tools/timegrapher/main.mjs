@@ -1,3 +1,5 @@
+import {tr, diagnostic, localizeDocument, language} from './localization.mjs';
+localizeDocument();
 import {positionForView, readPreference} from './interface.mjs';
 import {describeMicrophone, microphoneConstraints, listMicrophones} from './microphone.mjs';
 import {EnvelopeBuffer, DemoSource} from './analyzer.mjs';
@@ -14,9 +16,9 @@ const stabilizer=new MeasurementStabilizer('quiet');
 const session=new SessionCollector();
 let traceMode='calm', trendSamples=[], lastTrendSample=-Infinity, displayReadings=null;
 const POSITION_NAMES=Object.freeze({
-  dial_up:'Zifferblatt oben',dial_down:'Zifferblatt unten',
-  crown_up:'Krone oben',crown_down:'Krone unten',
-  crown_left:'Krone links',crown_right:'Krone rechts',
+  dial_up:tr("Zifferblatt oben"),dial_down:tr("Zifferblatt unten"),
+  crown_up:tr("Krone oben"),crown_down:tr("Krone unten"),
+  crown_left:tr("Krone links"),crown_right:tr("Krone rechts"),
 });
 let interfaceView='quick', expertPosition=null;
 let chosenPosition=positionForView(interfaceView,expertPosition);
@@ -52,13 +54,13 @@ async function refreshMicrophones(requestPermission=false){
     if(requestPermission)probe=await navigator.mediaDevices.getUserMedia(microphoneConstraints());
     const devices=await listMicrophones(navigator.mediaDevices);
     const selected=els.microphoneDevice.value;
-    els.microphoneDevice.replaceChildren(new Option('Browser-/Android-Standard',''));
-    for(const [index,device] of devices.entries())els.microphoneDevice.add(new Option(device.label||`Mikrofon ${index+1} (Name nicht verfügbar)`,device.deviceId));
+    els.microphoneDevice.replaceChildren(new Option(tr("Browser-/Android-Standard"),''));
+    for(const [index,device] of devices.entries())els.microphoneDevice.add(new Option(device.label||tr("Mikrofon {0} (Name nicht verfügbar)", index+1),device.deviceId));
     if(devices.some(device=>device.deviceId===selected))els.microphoneDevice.value=selected;
-    else if(selected){els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent='Vorheriger Eingang nicht mehr verfügbar. Bitte Eingang und Zuordnung erneut prüfen.';}
-    if(requestPermission)els.microphoneStatus.textContent=devices.length?'Eingänge geladen. Quelle wird beim Messstart am aktiven Mikrofon geprüft.':'Browser liefert keine Geräteliste. Standard verwenden und Quelle manuell zuordnen.';
+    else if(selected){els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent=tr("Vorheriger Eingang nicht mehr verfügbar. Bitte Eingang und Zuordnung erneut prüfen.");}
+    if(requestPermission)els.microphoneStatus.textContent=devices.length?tr("Eingänge geladen. Quelle wird beim Messstart am aktiven Mikrofon geprüft."):tr("Browser liefert keine Geräteliste. Standard verwenden und Quelle manuell zuordnen.");
   }catch{
-    els.microphoneStatus.textContent='Geräteerkennung nicht verfügbar oder Zugriff abgelehnt. Browserberechtigung prüfen; Standard und manuelle Zuordnung sind weiterhin wählbar.';
+    els.microphoneStatus.textContent=tr("Geräteerkennung nicht verfügbar oder Zugriff abgelehnt. Browserberechtigung prüfen; Standard und manuelle Zuordnung sind weiterhin wählbar.");
   }finally{
     probe?.getTracks().forEach(track=>track.stop());
     probingMicrophones=false;updateMicrophoneControls();
@@ -68,8 +70,8 @@ async function refreshMicrophones(requestPermission=false){
 const API='http://[::1]:8788/api';
 const requestedWatchId=new URLSearchParams(window.location.search).get('watchId');
 let completedMeasurement=null,savedMeasurement=false,knownWatchIds=new Set(),savingMeasurement=false;
-const printNum=x=>Number(x).toLocaleString('de-DE');
-const printDecimal=(x,d=1)=>Number(x).toFixed(d).replace('.',',');
+const printNum=x=>Number(x).toLocaleString(language);
+const printDecimal=(x,d=1)=>new Intl.NumberFormat(language,{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false}).format(Number(x));
 // Shared numeric clipping helper for the waveform phase-chart coordinates.
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const showError=text=>{els.error.textContent=text;els.error.classList.toggle('hidden',!text);};
@@ -90,24 +92,24 @@ function updatePositionControls(){
     button.setAttribute('aria-pressed',String(selected));
     button.disabled=running||!!completedMeasurement;
   }
-  els.selectedPosition.textContent=chosenPosition?POSITION_NAMES[chosenPosition]:'Noch keine Lage ausgewählt';
+  els.selectedPosition.textContent=chosenPosition?POSITION_NAMES[chosenPosition]:tr("Noch keine Lage ausgewählt");
 }
 function updateSessionProgress(){
   const seconds=Math.floor(session.elapsed/1000);
   els.sessionTimer.textContent=`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')} / 01:30`;
   els.sessionBar.style.width=`${Math.round(session.progress*100)}%`;
   if(!running&&session.elapsed===0){
-    els.sessionPhase.textContent='Bereit für 90 Sekunden';
-    els.sessionHint.textContent='30 Sekunden Einmessung, danach 60 Sekunden Auswertung.';
+    els.sessionPhase.textContent=tr("Bereit für 90 Sekunden");
+    els.sessionHint.textContent=tr("30 Sekunden Einmessung, danach 60 Sekunden Auswertung.");
   }else if(session.phase==='warmup'){
-    els.sessionPhase.textContent='Einmessung';
-    els.sessionHint.textContent=`Noch ${Math.ceil((WARMUP_MS-session.elapsed)/1000)} s bis zur Auswertung · Uhr ruhig halten.`;
+    els.sessionPhase.textContent=tr("Einmessung");
+    els.sessionHint.textContent=tr("Noch {0} s bis zur Auswertung · Uhr ruhig halten.", Math.ceil((WARMUP_MS-session.elapsed)/1000));
   }else if(session.phase==='evaluation'){
-    els.sessionPhase.textContent='Auswertung';
-    els.sessionHint.textContent=`Noch ${Math.ceil((TOTAL_MS-session.elapsed)/1000)} s · Drei unabhängige Messabschnitte.`;
+    els.sessionPhase.textContent=tr("Auswertung");
+    els.sessionHint.textContent=tr("Noch {0} s · Drei unabhängige Messabschnitte.", Math.ceil((TOTAL_MS-session.elapsed)/1000));
   }else{
-    els.sessionPhase.textContent='Messung abgeschlossen';
-    els.sessionHint.textContent='90 Sekunden vollständig; Messergebnis wird geprüft.';
+    els.sessionPhase.textContent=tr("Messung abgeschlossen");
+    els.sessionHint.textContent=tr("90 Sekunden vollständig; Messergebnis wird geprüft.");
   }
 }
 function showFinalSummary(message,warning=false){
@@ -119,27 +121,27 @@ async function loadCollectionWatches(){
   try{
     const response=await fetch(`${API}/table/watches?select=id,brand,model`);
     const payload=await response.json();
-    if(!response.ok||!Array.isArray(payload.data))throw new Error('Keine Uhrenliste');
+    if(!response.ok||!Array.isArray(payload.data))throw new Error(tr("Keine Uhrenliste"));
     const watches=payload.data.filter(w=>typeof w.id==='string'&&typeof w.brand==='string'&&typeof w.model==='string')
       .sort((a,b)=>`${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`,'de'));
     knownWatchIds=new Set(watches.map(w=>w.id));
-    els.watchSelect.replaceChildren(new Option('Uhr auswählen …',''));
+    els.watchSelect.replaceChildren(new Option(tr("Uhr auswählen …"),''));
     for(const w of watches)els.watchSelect.add(new Option(`${w.brand} · ${w.model}`,w.id));
     els.watchSelect.disabled=watches.length===0;
     if(requestedWatchId&&knownWatchIds.has(requestedWatchId)){
       els.watchSelect.value=requestedWatchId;
       document.querySelector('.crowniq-back').href=`/watches/${encodeURIComponent(requestedWatchId)}`;
-      saveFeedback('Diese Uhr ist vorausgewählt. Mikrofonmessung durchführen, beenden und speichern.');
+      saveFeedback(tr("Diese Uhr ist vorausgewählt. Mikrofonmessung durchführen, beenden und speichern."));
     }else if(watches.length){
       saveFeedback(mode==='demo'?
-        'Demo-Signale sind Testdaten und können nicht gespeichert werden. Für echte Messungen auf „Mikrofon“ wechseln.':
-        'Mikrofonmessung durchführen, beenden und anschließend die passende Uhr auswählen.');
-    }else saveFeedback('Noch keine Uhr in der Sammlung vorhanden.',true);
+        tr("Demo-Signale sind Testdaten und können nicht gespeichert werden. Für echte Messungen auf „Mikrofon“ wechseln."):
+        tr("Mikrofonmessung durchführen, beenden und anschließend die passende Uhr auswählen."));
+    }else saveFeedback(tr("Noch keine Uhr in der Sammlung vorhanden."),true);
     updateSaveControls();
   }catch(error){
-    els.watchSelect.replaceChildren(new Option('Sammlung nicht erreichbar',''));
+    els.watchSelect.replaceChildren(new Option(tr("Sammlung nicht erreichbar"),''));
     els.watchSelect.disabled=true;
-    saveFeedback('Uhren konnten nicht geladen werden. Bitte Crowniq-Server prüfen.',true);
+    saveFeedback(tr("Uhren konnten nicht geladen werden. Bitte Crowniq-Server prüfen."),true);
     updateSaveControls();
   }
 }
@@ -152,31 +154,31 @@ function resetReadings(){
   updateSaveControls();
   updatePositionControls();
   updateSessionProgress();
-  els.bph.textContent='—';els.bphHint.textContent='Warte auf ein regelmäßiges Tick-Signal.';
-  els.confidence.textContent='WARTET';els.rate.textContent='—';els.beatError.textContent='—';
+  els.bph.textContent='—';els.bphHint.textContent=tr("Warte auf ein regelmäßiges Tick-Signal.");
+  els.confidence.textContent=tr("WARTET");els.rate.textContent='—';els.beatError.textContent='—';
   els.score.textContent='—';els.scoreBar.style.width='0%';els.detected.textContent='—';
-  els.duration.textContent='00:00';els.quality.textContent='—';els.signalLevel.textContent='Pegel: —';
-  els.signalTag.textContent='KEIN SIGNAL';els.signalTag.classList.remove('on');
-  els.traceStatus.textContent='WARTET';els.traceScale.textContent='Abweichung: — ms';
-  els.rms.textContent='—';els.candidates.textContent='—';els.reason.textContent='Warte auf ein geeignetes Signal.';
-  els.rawValues.textContent='';els.trendHint.textContent='Warte auf eine stabile Messung.';
-  els.phaseLabel.textContent='Suche läuft';els.phaseHint.textContent='Messwerte werden nach der Einmessphase freigegeben.';
+  els.duration.textContent='00:00';els.quality.textContent='—';els.signalLevel.textContent=tr("Pegel: —");
+  els.signalTag.textContent=tr("KEIN SIGNAL");els.signalTag.classList.remove('on');
+  els.traceStatus.textContent=tr("WARTET");els.traceScale.textContent=tr("Abweichung: — ms");
+  els.rms.textContent='—';els.candidates.textContent='—';els.reason.textContent=tr("Warte auf ein geeignetes Signal.");
+  els.rawValues.textContent='';els.trendHint.textContent=tr("Warte auf eine stabile Messung.");
+  els.phaseLabel.textContent=tr("Suche läuft");els.phaseHint.textContent=tr("Messwerte werden nach der Einmessphase freigegeben.");
   els.gateBar.style.width='0%';els.gateRemaining.textContent='—';
   draw();
 }
 function changeMode(next){
   if(running)stop();mode=next;showError('');resetReadings();
-  if(mode==='demo')saveFeedback('Demo-Signale sind Testdaten und können nicht gespeichert werden.');
-  else saveFeedback('Lage auswählen und die 90-Sekunden-Messung vollständig abwarten.');
-  els.sourceTitle.textContent=mode==='demo'?'Demo-Signal':'Mikrofonmessung';
-  els.sourceDescription.textContent=mode==='demo'?'Künstliche Testsignale · keine Speicherung.':'Echte Uhr messen · 90 Sekunden · lokal.';
+  if(mode==='demo')saveFeedback(tr("Demo-Signale sind Testdaten und können nicht gespeichert werden."));
+  else saveFeedback(tr("Lage auswählen und die 90-Sekunden-Messung vollständig abwarten."));
+  els.sourceTitle.textContent=mode==='demo'?tr("Demo-Signal"):tr("Mikrofonmessung");
+  els.sourceDescription.textContent=mode==='demo'?tr("Künstliche Testsignale · keine Speicherung."):tr("Echte Uhr messen · 90 Sekunden · lokal.");
   els.positionPicker.classList.toggle('hidden',mode!=='mic');
   if(mode==='mic')els.demoPanel.open=false;
   els.demoTab.classList.toggle('active',mode==='demo');els.micTab.classList.toggle('active',mode==='mic');
   els.demoTab.setAttribute('aria-pressed',mode==='demo');els.micTab.setAttribute('aria-pressed',mode==='mic');
   els.demoOptions.classList.toggle('hidden',mode!=='demo');els.micOptions.classList.toggle('hidden',mode!=='mic');
-  els.startText.textContent=mode==='demo'?'Demo starten':'Messung starten';
-  els.audioInfo.textContent=mode==='demo'?'Virtueller Signalgenerator':'Noch nicht geprüft';
+  els.startText.textContent=mode==='demo'?tr("Demo starten"):tr("Messung starten");
+  els.audioInfo.textContent=mode==='demo'?tr("Virtueller Signalgenerator"):tr("Noch nicht geprüft");
 }
 function feed(samples){
   if(!running)return;
@@ -189,41 +191,41 @@ function feed(samples){
 }
 function updateReadings(result){
   displayReadings=stabilizer.update(result,buffer.totalBins);
-  els.rawValues.textContent=displayReadings.rawRate===null?'':`Rohwerte: ${displayReadings.rawRate>=0?'+':''}${printDecimal(displayReadings.rawRate,1)} s/Tag · ${printDecimal(displayReadings.rawBeatError,2)} ms`;
+  els.rawValues.textContent=displayReadings.rawRate===null?'':tr("Rohwerte: {0}{1} s/Tag · {2} ms", displayReadings.rawRate>=0?'+':'', printDecimal(displayReadings.rawRate,1), printDecimal(displayReadings.rawBeatError,2));
   els.rawValues.classList.toggle('hidden',traceMode!=='detail'||!displayReadings.ready||displayReadings.rawRate===null);
   const phase=displayReadings.phase;
-  els.phaseLabel.textContent=phase==='stable'?'Stabil':phase==='warmup'?'Einmessphase':phase==='stabilizing'?'Stabilisiert sich':'Suche läuft';
-  els.phaseHint.textContent=displayReadings.message;
+  els.phaseLabel.textContent=phase==='stable'?tr("Stabil"):phase==='warmup'?tr("Einmessphase"):phase==='stabilizing'?tr("Stabilisiert sich"):tr("Suche läuft");
+  els.phaseHint.textContent=diagnostic(displayReadings.message);
   els.gateBar.style.width=`${Math.round(100*displayReadings.progress)}%`;
-  els.gateRemaining.textContent=phase==='stable'?'Freigegeben':displayReadings.remaining>0?`mind. ${displayReadings.remaining} s`:'Qualitätsprüfung';
+  els.gateRemaining.textContent=phase==='stable'?tr("Freigegeben"):displayReadings.remaining>0?tr("mind. {0} s", displayReadings.remaining):tr("Qualitätsprüfung");
   if(displayReadings.rate!==null){
     const t=buffer.totalBins,rate=displayReadings.rate;
     if(t-lastTrendSample>=1000){lastTrendSample=t;trendSamples.push({t,rate});trendSamples=trendSamples.filter(p=>t-p.t<=60000);}
-    els.trendHint.textContent='Geglätteter Verlauf nach Einmessphase · Rohdaten unverändert';
-  }else{trendSamples=[];lastTrendSample=-Infinity;els.trendHint.textContent='Warte auf eine stabile Messung.';}
+    els.trendHint.textContent=tr("Geglätteter Verlauf nach Einmessphase · Rohdaten unverändert");
+  }else{trendSamples=[];lastTrendSample=-Infinity;els.trendHint.textContent=tr("Warte auf eine stabile Messung.");}
   els.detected.textContent=printNum(result.events);
   const d=Math.floor(buffer.totalBins/1000);
   els.duration.textContent=`${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
   const tail=buffer.values.slice(-500),vmax=tail.length?Math.max(...tail):0;
-  els.signalLevel.textContent=`Pegel: ${vmax.toFixed(4)}`;
+  els.signalLevel.textContent=tr("Pegel: {0}", vmax.toFixed(4));
   const hasSignal=result.events>0;
-  els.signalTag.textContent=hasSignal?'TICK-IMPULSE ERKANNT':'SUCHE NACH TICKS';
+  els.signalTag.textContent=hasSignal?tr("TICK-IMPULSE ERKANNT"):tr("SUCHE NACH TICKS");
   els.signalTag.classList.toggle('on',hasSignal);
-  els.reason.textContent=result.reason;
+  els.reason.textContent=diagnostic(result.reason);
   els.rms.textContent=result.rms===null?'—':`${printDecimal(result.rms,2)} ms`;
   els.candidates.textContent=result.candidates.length>1?result.candidates.slice(1).map(c=>printNum(c.bph)).join(' / '):'—';
   if(result.bph===null){
     els.bph.textContent='—';els.rate.textContent='—';els.beatError.textContent='—';
-    els.confidence.textContent='SUCHE LÄUFT';els.bphHint.textContent=hasSignal?'Suche ein stabiles Intervall …':'Noch keine regelmäßigen Tick-Impulse.';
-    els.score.textContent='—';els.scoreBar.style.width='0%';els.quality.textContent='Noch nicht bestimmt';
+    els.confidence.textContent=tr("SUCHE LÄUFT");els.bphHint.textContent=hasSignal?tr("Suche ein stabiles Intervall …"):tr("Noch keine regelmäßigen Tick-Impulse.");
+    els.score.textContent='—';els.scoreBar.style.width='0%';els.quality.textContent=tr("Noch nicht bestimmt");
     return;
   }
   els.bph.textContent=printNum(result.bph);
-  els.confidence.textContent=displayReadings.phase==='stable'?'STABIL':displayReadings.phase==='warmup'?'EINMESSEN':displayReadings.phase==='stabilizing'?'PRÜFUNG':'SUCHE LÄUFT';
+  els.confidence.textContent=displayReadings.phase==='stable'?tr("STABIL"):displayReadings.phase==='warmup'?tr("EINMESSEN"):displayReadings.phase==='stabilizing'?tr("PRÜFUNG"):tr("SUCHE LÄUFT");
   els.score.textContent=`${result.confidence} %`;
   els.scoreBar.style.width=`${result.confidence}%`;
-  els.quality.textContent=result.quality==='high'?'Hoch':result.quality==='medium'?'Mittel':'Niedrig';
-  els.bphHint.textContent=`Aus ${result.pulseCount} Hemmungsschlägen automatisch bestimmt`;
+  els.quality.textContent=result.quality==='high'?tr("Hoch"):result.quality==='medium'?tr("Mittel"):tr("Niedrig");
+  els.bphHint.textContent=tr("Aus {0} Hemmungsschlägen automatisch bestimmt", result.pulseCount);
   const smoothRate=displayReadings.rate,smoothBeat=displayReadings.beatError;
   els.rate.textContent=smoothRate===null?'—':`${smoothRate>=0?'+':''}${printDecimal(smoothRate,1)}`;
   els.beatError.textContent=smoothBeat===null?'—':printDecimal(smoothBeat,2);
@@ -243,7 +245,7 @@ function drawWaveform(){
   ctx.lineWidth=1;ctx.strokeStyle='#233950';
   for(let i=1;i<5;i++){const y=h*i/5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
   const data=buffer.values.slice(-2000);
-  if(!data.length){ctx.fillStyle='#69829a';ctx.textAlign='center';ctx.font='13px system-ui';ctx.fillText('Noch kein Signal',w/2,h/2+4);return;}
+  if(!data.length){ctx.fillStyle='#69829a';ctx.textAlign='center';ctx.font='13px system-ui';ctx.fillText(tr("Noch kein Signal"),w/2,h/2+4);return;}
   let maximum=0;for(const p of data)maximum=Math.max(maximum,p);
   maximum=Math.max(maximum,.005);
   const step=Math.max(1,Math.floor(data.length/w));
@@ -265,9 +267,9 @@ function drawTraces(){
   }
   const result=lastAnalysis;
   if(!result?.phasePoints?.length){
-    els.traceStatus.textContent='SUCHE LÄUFT';els.traceScale.textContent='Abweichung: — ms';
+    els.traceStatus.textContent=tr("SUCHE LÄUFT");els.traceScale.textContent=tr("Abweichung: — ms");
     ctx.fillStyle='#8da3b7';ctx.font='13px system-ui';ctx.textAlign='center';
-    ctx.fillText('Warte auf stabile Schlagzahl',pad.l+plotW/2,pad.t+plotH/2);
+    ctx.fillText(tr("Warte auf stabile Schlagzahl"),pad.l+plotW/2,pad.t+plotH/2);
     return;
   }
   const points=result.phasePoints;
@@ -297,8 +299,8 @@ function drawTraces(){
       for(const p of segment){ctx.beginPath();ctx.arc(x(p.t),y(p.phase),1.8,0,Math.PI*2);ctx.fill();}
     }
   }
-  els.traceStatus.textContent=traceMode==='calm'?`RUHIG · ${points.length} TICKS`:`ROH · ${points.length} PUNKTE`;
-  els.traceScale.textContent=`Vertikal: ±${halfRange} ms`;
+  els.traceStatus.textContent=traceMode==='calm'?tr("RUHIG · {0} TICKS", points.length):tr("ROH · {0} PUNKTE", points.length);
+  els.traceScale.textContent=tr("Vertikal: ±{0} ms", halfRange);
 }
 function drawRateTrend(){
   const dims=setupCanvas(els.rateTrend);if(!dims)return;
@@ -306,7 +308,7 @@ function drawRateTrend(){
   const summary=summarizeTrend(trendSamples);
   if(!summary||summary.values.length<2){
     ctx.fillStyle='#70869a';ctx.font='12px system-ui';ctx.textAlign='center';
-    ctx.fillText('Trend nach stabiler Messung sichtbar',w/2,h/2+4);return;
+    ctx.fillText(tr("Trend nach stabiler Messung sichtbar"),w/2,h/2+4);return;
   }
   const {center,halfRange,values}=summary;
   const pW=w-pad.l-pad.r,pH=h-pad.t-pad.b;
@@ -328,8 +330,8 @@ function setTraceMode(next){
   els.calmBtn.setAttribute('aria-pressed',traceMode==='calm');els.detailBtn.setAttribute('aria-pressed',traceMode==='detail');
   els.rawValues.classList.toggle('hidden',traceMode!=='detail'||!displayReadings?.ready||displayReadings.rawRate===null);
   $('traceInfo').textContent=traceMode==='calm'?
-    'Ruhige Ansicht: Die Messspuren A/B werden ausschließlich für die Darstellung robust geglättet. Die Rohdaten und Messberechnungen bleiben unverändert.':
-    'Detailansicht: Alle erkannten Schlagzeitpunkte A/B werden ungefiltert dargestellt. Einzelne Ausreißer und Störimpulse sind sichtbar.';
+    tr("Ruhige Ansicht: Die Messspuren A/B werden ausschließlich für die Darstellung robust geglättet. Die Rohdaten und Messberechnungen bleiben unverändert."):
+    tr("Detailansicht: Alle erkannten Schlagzeitpunkte A/B werden ungefiltert dargestellt. Einzelne Ausreißer und Störimpulse sind sichtbar.");
   drawTraces();
 }
 function draw(){drawWaveform();drawTraces();drawRateTrend();}
@@ -343,20 +345,20 @@ function createDemo(){
   demonstrator=new DemoSource(Number(els.demoBph.value),rate,beatError,75321,opts);
 }
 async function startMicrophone(){
-  if(!window.isSecureContext)throw new Error('Lokale Adresse wird nicht als sicherer Kontext erkannt. http://[::1]:3000/tools/timegrapher/ öffnen.');
-  if(!navigator.mediaDevices?.getUserMedia)throw new Error('Mikrofon-API fehlt in diesem Browser. Firefox oder Chrome verwenden.');
+  if(!window.isSecureContext)throw new Error(tr("Lokale Adresse wird nicht als sicherer Kontext erkannt. http://[::1]:3000/tools/timegrapher/ öffnen."));
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error(tr("Mikrofon-API fehlt in diesem Browser. Firefox oder Chrome verwenden."));
   stream=await navigator.mediaDevices.getUserMedia(microphoneConstraints(els.microphoneDevice.value));
   if(!running){for(const track of stream.getTracks())track.stop();stream=null;return;}
   const track=stream.getAudioTracks()[0];
-  if(!track||track.readyState==='ended')throw new Error('Kein aktiver Audioeingang.');
+  if(!track||track.readyState==='ended')throw new Error(tr("Kein aktiver Audioeingang."));
   measurementMicrophone=describeMicrophone(track,els.microphoneType.value);
-  const names={internal:'Internes Mikrofon',usb:'Externes USB-Mikrofon / TGBC',unknown:'Mikrofon unbekannt'};
-  els.microphoneStatus.textContent=`${names[measurementMicrophone.microphone_type]} · ${measurementMicrophone.microphone_detection==='manual'?'manuell zugeordnet':measurementMicrophone.microphone_detection==='label'?'anhand des Gerätenamens erkannt':'bitte vor der nächsten Messung manuell zuordnen'}${track.label?` · ${track.label}`:''}`;
+  const names={internal:tr("Internes Mikrofon"),usb:tr("Externes USB-Mikrofon / TGBC"),unknown:tr("Mikrofon unbekannt")};
+  els.microphoneStatus.textContent=`${names[measurementMicrophone.microphone_type]} · ${measurementMicrophone.microphone_detection==='manual'?tr("manuell zugeordnet"):measurementMicrophone.microphone_detection==='label'?tr("anhand des Gerätenamens erkannt"):tr("bitte vor der nächsten Messung manuell zuordnen")}${track.label?` · ${track.label}`:''}`;
   track.addEventListener('ended',()=>{
-    if(running){showError('Audioeingang getrennt. Bitte Mikrofon prüfen und eine neue Messung starten.');void stop();}
+    if(running){showError(tr("Audioeingang getrennt. Bitte Mikrofon prüfen und eine neue Messung starten."));void stop();}
   },{once:true});
   const Context=window.AudioContext||window.webkitAudioContext;
-  if(!Context)throw new Error('Web Audio API nicht verfügbar.');
+  if(!Context)throw new Error(tr("Web Audio API nicht verfügbar."));
   audioContext=new Context({latencyHint:'interactive'});
   await audioContext.resume();
   if(!running)return;
@@ -391,14 +393,14 @@ async function start(){
   if(running)return stop();
   if(session.phase==='complete'){
     resetReadings();
-    setStatus('Bereit');
-    els.startText.textContent=mode==='demo'?'Demo starten':'Messung starten';
+    setStatus(tr("Bereit"));
+    els.startText.textContent=mode==='demo'?tr("Demo starten"):tr("Messung starten");
     els.startIcon.textContent='▶';
-    saveFeedback('Neue Messung bereit. Bei Bedarf eine andere Lage wählen.');
+    saveFeedback(tr("Neue Messung bereit. Bei Bedarf eine andere Lage wählen."));
     return;
   }
   if(mode==='mic'&&!chosenPosition){
-    showError('Bitte zuerst die Messposition der Uhr auswählen.');
+    showError(tr("Bitte zuerst die Messposition der Uhr auswählen."));
     return;
   }
   showError('');resetReadings();running=true;lastUpdate=0;
@@ -406,19 +408,19 @@ async function start(){
   updatePositionControls();
   updateSaveControls();
   updateSessionProgress();
-  setStatus('Wird gestartet …');els.startBtn.disabled=true;
+  setStatus(tr("Wird gestartet …"));els.startBtn.disabled=true;
   for(const key of ['resetBtn','demoTab','micTab'])els[key].disabled=true;
   try{
     if(mode==='demo'){
       createDemo();timer=setInterval(()=>feed(demonstrator.take(50,1)),50);
-      els.audioInfo.textContent='Virtueller Signalgenerator · 1 ms';
+      els.audioInfo.textContent=tr("Virtueller Signalgenerator · 1 ms");
     }else await startMicrophone();
     if(!running)return;
-    setStatus(mode==='demo'?'Demo läuft':'Mikrofon aktiv',true);
-    els.startText.textContent='Messung beenden';els.startIcon.textContent='■';animation();
+    setStatus(mode==='demo'?tr("Demo läuft"):tr("Mikrofon aktiv"),true);
+    els.startText.textContent=tr("Messung beenden");els.startIcon.textContent='■';animation();
   }catch(error){
     console.error('Timegrapher start:',error);
-    showError(error.name==='NotAllowedError'?'Mikrofonzugriff abgelehnt. Browserberechtigung prüfen.':`Mikrofonstart fehlgeschlagen: ${error.message}`);
+    showError(error.name==='NotAllowedError'?tr("Mikrofonzugriff abgelehnt. Browserberechtigung prüfen."):tr("Mikrofonstart fehlgeschlagen: {0}", error.message));
     await stop();
   }finally{els.startBtn.disabled=false;for(const key of ['resetBtn','demoTab','micTab'])els[key].disabled=false;}
 }
@@ -430,15 +432,15 @@ async function stop({completed=false}={}){
       els.bph.textContent=printNum(result.bph);
       els.rate.textContent=`${result.rate>=0?'+':''}${printDecimal(result.rate,1)}`;
       els.beatError.textContent=printDecimal(result.beatError,2);
-      els.confidence.textContent=result.quality==='high'?'STABIL':'AUSGEWERTET';
-      els.quality.textContent=result.quality==='high'?'Hoch':'Mittel';
+      els.confidence.textContent=result.quality==='high'?tr("STABIL"):tr("AUSGEWERTET");
+      els.quality.textContent=result.quality==='high'?tr("Hoch"):tr("Mittel");
       els.score.textContent=`${result.confidence} %`;
       els.scoreBar.style.width=`${result.confidence}%`;
-      els.phaseLabel.textContent='90 Sekunden abgeschlossen';
-      els.phaseHint.textContent='Der Endwert stammt aus getrennten Abschnitten, nicht aus dem letzten Live-Wert.';
-      els.gateRemaining.textContent='Freigegeben';
+      els.phaseLabel.textContent=tr("90 Sekunden abgeschlossen");
+      els.phaseHint.textContent=tr("Der Endwert stammt aus getrennten Abschnitten, nicht aus dem letzten Live-Wert.");
+      els.gateRemaining.textContent=tr("Freigegeben");
       els.gateBar.style.width='100%';
-      showFinalSummary(`Gesamtergebnis aus ${result.accepted} von 3 Messabschnitten\nGangabweichung: ${result.rate>=0?'+':''}${printDecimal(result.rate,1)} s/Tag · Spannweite: ${printDecimal(result.rateSpread,1)} s/Tag\nAbfallfehler: ${printDecimal(result.beatError,2)} ms · Spannweite: ${printDecimal(result.beatSpread,2)} ms\nLage: ${POSITION_NAMES[chosenPosition]||'Nicht festgelegt'}`);
+      showFinalSummary(tr("Gesamtergebnis aus {0} von 3 Messabschnitten\nGangabweichung: {1}{2} s/Tag · Spannweite: {3} s/Tag\nAbfallfehler: {4} ms · Spannweite: {5} ms\nLage: {6}", result.accepted, result.rate>=0?'+':'', printDecimal(result.rate,1), printDecimal(result.rateSpread,1), printDecimal(result.beatError,2), printDecimal(result.beatSpread,2), POSITION_NAMES[chosenPosition]||'Nicht festgelegt'));
       if(mode==='mic'){
         completedMeasurement={
           recorded_at:new Date().toISOString(),source:'crowniq',
@@ -448,18 +450,18 @@ async function stop({completed=false}={}){
           duration_s:90,rate_spread_s_per_day:result.rateSpread,
           beat_spread_ms:result.beatSpread,position:chosenPosition,
         };
-        saveFeedback('90 Sekunden erfolgreich ausgewertet. Uhr auswählen und Ergebnis speichern.');
+        saveFeedback(tr("90 Sekunden erfolgreich ausgewertet. Uhr auswählen und Ergebnis speichern."));
       }else{
-        saveFeedback('Demomessung beendet. Demo-Ergebnisse werden nicht in die Sammlung übernommen.');
+        saveFeedback(tr("Demomessung beendet. Demo-Ergebnisse werden nicht in die Sammlung übernommen."));
       }
-      els.sessionHint.textContent='Auswertung erfolgreich abgeschlossen. Das Endergebnis ist freigegeben.';
+      els.sessionHint.textContent=tr("Auswertung erfolgreich abgeschlossen. Das Endergebnis ist freigegeben.");
     }else{
-      showFinalSummary(`Messung nicht freigegeben: ${result.reason}\nBitte Signal oder Lage prüfen und erneut 90 Sekunden messen.`,true);
-      saveFeedback('Kein ausreichend zuverlässiges Ergebnis – Speichern gesperrt.',true);
-      els.sessionHint.textContent='Auswertung beendet, aber die Messabschnitte waren nicht ausreichend zuverlässig.';
+      showFinalSummary(tr("Messung nicht freigegeben: {0}\nBitte Signal oder Lage prüfen und erneut 90 Sekunden messen.", result.reason),true);
+      saveFeedback(tr("Kein ausreichend zuverlässiges Ergebnis – Speichern gesperrt."),true);
+      els.sessionHint.textContent=tr("Auswertung beendet, aber die Messabschnitte waren nicht ausreichend zuverlässig.");
     }
   }else if(hadMeasurement){
-    saveFeedback('Messung vorzeitig beendet. Für ein speicherbares Ergebnis sind alle 90 Sekunden erforderlich.',true);
+    saveFeedback(tr("Messung vorzeitig beendet. Für ein speicherbares Ergebnis sind alle 90 Sekunden erforderlich."),true);
   }
   running=false;
   updateMicrophoneControls();
@@ -471,8 +473,8 @@ async function stop({completed=false}={}){
   if(gain){try{gain.disconnect();}catch{}gain=null;}
   if(stream){for(const track of stream.getTracks())track.stop();stream=null;}
   if(audioContext){const context=audioContext;audioContext=null;try{await context.close();}catch{}}
-  setStatus(completed?'Abgeschlossen':'Bereit');
-  els.startText.textContent=completed?'Neue Messung':mode==='demo'?'Demo starten':'Messung starten';
+  setStatus(completed?tr("Abgeschlossen"):tr("Bereit"));
+  els.startText.textContent=completed?tr("Neue Messung"):mode==='demo'?tr("Demo starten"):tr("Messung starten");
   els.startIcon.textContent='▶';
 }
 async function saveMeasurement(){
@@ -485,13 +487,13 @@ async function saveMeasurement(){
       body:JSON.stringify({...completedMeasurement,watch_id:watchId,user_id:'local-user'}),
     });
     const payload=await response.json();
-    if(!response.ok||payload.error)throw new Error(payload.error?.message||'Speichern fehlgeschlagen');
+    if(!response.ok||payload.error)throw new Error(payload.error?.message||tr("Speichern fehlgeschlagen"));
     savedMeasurement=true;
     els.viewWatchLink.href=`/watches/${encodeURIComponent(watchId)}`;
     els.viewWatchLink.classList.remove('hidden');
-    saveFeedback('Messung erfolgreich bei der ausgewählten Uhr gespeichert.',false,true);
+    saveFeedback(tr("Messung erfolgreich bei der ausgewählten Uhr gespeichert."),false,true);
   }catch(error){
-    saveFeedback(`Speichern fehlgeschlagen: ${error.message}`,true);
+    saveFeedback(tr("Speichern fehlgeschlagen: {0}", error.message),true);
   }finally{savingMeasurement=false;updateSaveControls();}
 }
 async function restartDemo(){if(mode!=='demo')return;if(running){await stop();await start();}else resetReadings();}
@@ -506,11 +508,11 @@ els.expertView.addEventListener('click',()=>setInterfaceView('expert'));
 els.themeToggle.addEventListener('click',()=>setToolTheme(document.documentElement.dataset.theme==='ivory'?'graphite':'ivory'));
 els.microphoneType.addEventListener('change',()=>{
   try{window.localStorage.setItem('crowniq-microphone-type',els.microphoneType.value);}catch{}
-  const names={auto:'Automatische Zuordnung beim Messstart',internal:'Internes Mikrofon · manuell zugeordnet',usb:'Externes USB-Mikrofon / TGBC · manuell zugeordnet',unknown:'Mikrofon unbekannt · manuell zugeordnet'};
+  const names={auto:tr("Automatische Zuordnung beim Messstart"),internal:tr("Internes Mikrofon · manuell zugeordnet"),usb:tr("Externes USB-Mikrofon / TGBC · manuell zugeordnet"),unknown:tr("Mikrofon unbekannt · manuell zugeordnet")};
   els.microphoneStatus.textContent=names[els.microphoneType.value];
 });
 els.refreshMicrophones.addEventListener('click',()=>refreshMicrophones(true));
-els.microphoneDevice.addEventListener('change',()=>{els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent='Eingang geändert. Quelle wird beim nächsten Start geprüft.';});
+els.microphoneDevice.addEventListener('change',()=>{els.microphoneType.value='auto';try{window.localStorage.removeItem('crowniq-microphone-type');}catch{}els.microphoneStatus.textContent=tr("Eingang geändert. Quelle wird beim nächsten Start geprüft.");});
 navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(!running&&!completedMeasurement)void refreshMicrophones();});
 els.calmBtn.addEventListener('click',()=>setTraceMode('calm'));
 els.detailBtn.addEventListener('click',()=>setTraceMode('detail'));
@@ -537,7 +539,7 @@ let storage;
 try{storage=window.localStorage;}catch{}
 setToolTheme(readPreference(storage,'crowniq-theme',['ivory','graphite','oled','timegrapher'],'ivory'));
 els.microphoneType.value=readPreference(storage,'crowniq-microphone-type',['auto','internal','usb','unknown'],'auto');
-const remembered={auto:'Quelle wird beim Start geprüft. Bei Bedarf Mikrofon & Messquelle öffnen.',internal:'Internes Mikrofon · manuelle Zuordnung vorbelegt',usb:'Externes USB-Mikrofon / TGBC · manuelle Zuordnung vorbelegt',unknown:'Mikrofon unbekannt · manuelle Zuordnung vorbelegt'};
+const remembered={auto:tr("Quelle wird beim Start geprüft. Bei Bedarf Mikrofon & Messquelle öffnen."),internal:tr("Internes Mikrofon · manuelle Zuordnung vorbelegt"),usb:tr("Externes USB-Mikrofon / TGBC · manuelle Zuordnung vorbelegt"),unknown:tr("Mikrofon unbekannt · manuelle Zuordnung vorbelegt")};
 els.microphoneStatus.textContent=remembered[els.microphoneType.value];
 setTraceMode('calm');
 els.stabilityMode.value=stabilizer.mode;

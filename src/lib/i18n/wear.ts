@@ -31,7 +31,7 @@ export const wear: NamespaceDict = {
     "wear.noWatchesInCollection": "No watches in the collection yet.",
   },
   de: {
-    "wear.title": "Wear Tracking",
+    "wear.title": "Trageprotokoll",
     "wear.subtitle": "Halte fest, welche Uhr du wann getragen hast.",
     "wear.addEntry": "Eintrag hinzufügen",
     "wear.watch": "Uhr",

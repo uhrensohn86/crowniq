@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/theme";
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_app/timegrapher")({
 function Timegrapher() {
   const { watchId } = Route.useSearch();
   const { theme } = useTheme();
+  const { lang, t } = useI18n();
   const navigate = useNavigate();
   const frame = useRef<HTMLIFrameElement>(null);
   const cleanup = useRef<() => void>(() => {});
@@ -79,12 +81,12 @@ function Timegrapher() {
 
   return (
     <>
-      {!ready && <p role="status">Zeitwaage wird geladen …</p>}
+      {!ready && <p role="status">{t("ui.loadingTimegrapher")}</p>}
       <iframe
-        key={watchId || "default"}
+        key={`${lang}:${watchId || "default"}`}
         ref={frame}
-        title="Crowniq Zeitwaage"
-        src={`/tools/timegrapher/index.html?embedded=1${watchId ? `&watchId=${encodeURIComponent(watchId)}` : ""}`}
+        title={`Crowniq ${t("ui.timegrapher")}`}
+        src={`/tools/timegrapher/index.html?embedded=1&lang=${lang}${watchId ? `&watchId=${encodeURIComponent(watchId)}` : ""}`}
         allow="microphone"
         onLoad={loaded}
         style={{
