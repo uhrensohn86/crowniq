@@ -4,7 +4,7 @@
 
 Crowniq ist eine lokale, für Smartphones optimierte Verwaltung von Uhrensammlungen. Die Termux-Version speichert Sammlungsdaten und Uhrenbilder direkt auf dem Gerät. Ein Crowniq-Konto oder eine Cloud-Datenbank ist **nicht erforderlich**.
 
-**Projektversion:** `1.2.0` (`VERSION.txt`). Dieses Release enthält die lokale Zeitwaage sowie die verbesserten Backup-/Restore-V3-Funktionen. Der aktuelle Quellcode wurde aus einem frischen Git-Klon in einem getrennten Termux-Verzeichnis installiert und getestet. Die Mikrofon-Zeitwaage bleibt experimentell und unkalibriert.
+**Projektversion:** `1.3.0` (`VERSION.txt`). TGBC-/USB-Messquellen, neues mobiles Design, Galerie mit Wisch-/Pfeilnavigation sowie Schnell-/Expertenmodus. In einer getrennten Android-/Termux-Installation einschließlich Messung und Persistenz nach Neustart getestet. Die Mikrofon-Zeitwaage bleibt experimentell und unkalibriert.
 
 ## Funktionen
 
@@ -41,7 +41,7 @@ bash start.sh
 Um statt des aktuellen Entwicklungsstands `main` eine veröffentlichte Version zu installieren, kann deren Tag ausgecheckt werden:
 
 ```bash
-git clone --branch v1.2.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq
+git clone --branch v1.3.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq
 ```
 
 **Wichtig:** Nicht über eine bestehende Installation klonen.
@@ -112,8 +112,16 @@ npm run build
 
 Frontend und Backend müssen bei der lokalen Entwicklung konsistent gestartet und konfiguriert werden. Verwende für Fehlerberichte künstliche Beispieldaten statt echter Uhrensammlungen. Weitere Screenshots und versionsspezifische Hinweise können später ergänzt werden.
 
-Änderungen in v1.2.0 stehen in [CHANGELOG.md](CHANGELOG.md). Die experimentelle Zeitwaage lässt sich über das Drei-Punkte-Menü oder direkt aus der Detailansicht einer Uhr öffnen.
+Änderungen in v1.3.0 stehen in [CHANGELOG.md](CHANGELOG.md). Die experimentelle Zeitwaage lässt sich über die gemeinsame Navigation oder direkt aus der Detailansicht einer Uhr öffnen.
 
 ## Lizenz
 
 MIT. Siehe [LICENSE](LICENSE).
+
+## Neu in v1.3.0
+
+- Gemeinsame schwebende Navigation, Fotokacheln, modernisiertes Dashboard und vier Farbthemen.
+- Galerie mit Wischen und Pfeilen. Schnellmessung mit Zifferblatt oben, Expertenmodus mit Diagnose. Beide verwenden unverändert dieselbe 90-Sekunden-Auswertung.
+- Messquelle je neuer Messung gespeichert. Bei unklarem Browser-Gerätenamen manuell zuordnen; alte Messungen bleiben erhalten.
+- Deutsch, Englisch, Französisch und Spanisch einschließlich Zeitwaage.
+- [Releasehinweise](docs/RELEASE-v1.3.0.md) und [sicherer Produktivumstieg](docs/PRODUCTION-v1.3.0.md).

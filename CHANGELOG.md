@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.0 — 2026-11-14
+
+TGBC/USB microphone source tracking, mobile UI redesign, gallery navigation, quick/expert measurement views, four-language timegrapher and viewport-aware navigation. Existing data preserved; 90-second method unchanged. See [full release notes](docs/RELEASE-v1.3.0.md).
+
 ## v1.2.0 — 2026-10-28
 
 ### Added

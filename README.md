@@ -4,7 +4,7 @@
 
 Crowniq is a local-first, mobile-friendly watch collection manager. The Termux edition stores collection information and watch images on the device. It does **not** require a Crowniq account or a cloud database.
 
-**Project version:** `1.2.0` (`VERSION.txt`). This release includes the local timegrapher and backup/restore V3. A fresh Git checkout was installed and tested in an isolated Termux directory. The microphone timegrapher remains experimental and uncalibrated.
+**Project version:** `1.3.0` (`VERSION.txt`). TGBC/USB microphone source tracking, redesigned mobile UI, swipeable gallery and quick/expert measurement views. Tested in an isolated Android/Termux installation, including measurement persistence after restart. The microphone timegrapher remains experimental and uncalibrated.
 
 ## Features
 
@@ -38,7 +38,7 @@ bash install-termux.sh
 bash start.sh
 ```
 
-To install a published version instead of the current `main` branch, clone its tag, for example `git clone --branch v1.2.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq`. Do not clone over an existing installation.
+To install a published version instead of the current `main` branch, clone its tag, for example `git clone --branch v1.3.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq`. Do not clone over an existing installation.
 
 Open **http://[::1]:3000** in the browser on the **same Android device**. The browser UI uses the local Python API at **http://[::1]:8788**. On the tested Android configuration, IPv6 loopback (`[::1]`) works more reliably than IPv4 `127.0.0.1`.
 
@@ -106,8 +106,16 @@ npm run build
 
 The frontend and backend must be started/configured consistently for local development. Avoid sharing real user collections when filing issues; use synthetic sample data instead. More screenshots and release-specific migration notes may be added later.
 
-For changes in v1.2.0, see [CHANGELOG.md](CHANGELOG.md). The experimental microphone tool can be opened from Crowniq's three-dot menu or directly from a watch's detail view.
+For changes in v1.3.0, see [CHANGELOG.md](CHANGELOG.md). The experimental microphone tool can be opened from the shared bottom navigation or directly from a watch's detail view.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## v1.3.0 highlights
+
+- Shared mobile navigation, photo tiles, redesigned dashboard and four themes.
+- Swipe/arrows in the photo gallery. Quick measurement defaults to dial up; expert mode exposes diagnostic controls. Both use the same 90-second analysis.
+- Microphone source saved with every new measurement. Generic browser labels require manual assignment; legacy measurements remain intact.
+- German, English, French and Spanish UI, including the timegrapher.
+- See [release notes](docs/RELEASE-v1.3.0.md) and [safe production migration](docs/PRODUCTION-v1.3.0.md).

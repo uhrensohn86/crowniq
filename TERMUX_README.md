@@ -2,7 +2,7 @@
 
 Crowniq läuft lokal auf Android mit React/Vite als Oberfläche und einem Python-Backend mit SQLite. Du brauchst keinen Crowniq-Account und keine externe Datenbank.
 
-**Versionshinweis:** `VERSION.txt` steht auf **1.2.0**. Zu diesem Stand gehören die experimentelle Mikrofon-Zeitwaage und die Backup-/Restore-V3-Verbesserungen. Vor der Veröffentlichung eines neuen GitHub-Releases muss eine frische Installation aus einem Git-Klon separat geprüft werden.
+**Versionshinweis:** `VERSION.txt` steht auf **1.3.0**. TGBC-Messquellen, neues mobiles Design, Galerie-Navigation und mehrsprachige Schnell-/Expertenmessung wurden in einer getrennten Android-/Termux-Installation getestet. Hinweise zum sicheren Produktivumstieg: [docs/PRODUCTION-v1.3.0.md](docs/PRODUCTION-v1.3.0.md).
 
 ## 1. Voraussetzungen
 
@@ -28,10 +28,10 @@ bash install-termux.sh
 bash start.sh
 ```
 
-Nach der Veröffentlichung von v1.2.0 kann statt des Entwicklungsstands `main` dessen unveränderlicher Release-Tag ausgecheckt werden:
+Nach der Veröffentlichung von v1.3.0 kann statt des Entwicklungsstands `main` dessen unveränderlicher Release-Tag ausgecheckt werden:
 
 ```bash
-git clone --branch v1.2.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq
+git clone --branch v1.3.0 --depth 1 https://github.com/uhrensohn86/crowniq.git ~/crowniq
 ```
 
 Die Installation nutzt die im Repository gespeicherte `package-lock.json` und `npm ci`; anschließend wird das Frontend gebaut. Sie **löscht keine vorhandene Sammlung**. Wenn npm oder der Build fehlschlägt, bitte die genaue Ausgabe prüfen und nicht ungeprüft alternative Installer ausführen.
